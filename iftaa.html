@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fatawa — Darul Iftaa New York</title>
+  <meta name="description" content="Browse and search Fatāwā (Islamic legal rulings) issued by the muftis of Darul Iftaa New York, a department of Darul Uloom New York." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <style>
+    /* ---- Iftaa Search Section ---- */
+    .iftaa-search-section {
+      background: var(--off-white);
+      border-bottom: 2px solid var(--border);
+      padding: 2rem 0;
+    }
+    .search-bar-wrap {
+      position: relative;
+      max-width: 680px;
+      margin: 0 auto 1.25rem;
+    }
+    .search-bar-wrap i.fa-search {
+      position: absolute;
+      left: 1.1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+    #fatwa-search {
+      width: 100%;
+      padding: 0.9rem 3rem 0.9rem 2.75rem;
+      border: 2px solid var(--border);
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-family: 'Poppins', sans-serif;
+      color: var(--text-body);
+      background: var(--white);
+      outline: none;
+      transition: var(--transition);
+    }
+    #fatwa-search:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 4px rgba(201,162,39,0.12);
+    }
+    #clear-search {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--text-muted);
+      color: white;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    #clear-search.visible { display: flex; }
+    .category-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .cat-filter-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      background: var(--white);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .cat-filter-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold-dark);
+    }
+    .cat-filter-btn.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--gold);
+    }
+
+    /* ---- Fatwa Grid ---- */
+    .iftaa-main { padding: 3rem 0 5rem; }
+    .results-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .results-count {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .results-count strong { color: var(--navy); }
+    .sort-select {
+      padding: 0.4rem 0.85rem;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-family: 'Poppins', sans-serif;
+      color: var(--text-body);
+      background: var(--white);
+      outline: none;
+      cursor: pointer;
+    }
+    .fatwa-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.75rem;
+    }
+    .fatwa-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+    }
+    .fatwa-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: var(--transition);
+    }
+    .fatwa-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(201,162,39,0.35);
+      color: inherit;
+    }
+    .fatwa-card:hover::before { transform: scaleX(1); }
+    .fatwa-card-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+    .fatwa-cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      margin-bottom: 0.85rem;
+    }
+    .cat-salah        { background: rgba(26,75,140,0.1);   color: #1A4B8C; }
+    .cat-zakaat       { background: rgba(201,162,39,0.15); color: #9E7D18; }
+    .cat-sawm         { background: rgba(46,134,193,0.12); color: #1A6090; }
+    .cat-business     { background: rgba(39,174,96,0.12);  color: #1E8449; }
+    .cat-food         { background: rgba(231,76,60,0.1);   color: #B03A2E; }
+    .cat-marriage     { background: rgba(155,89,182,0.12); color: #7D3C98; }
+    .cat-divorce      { background: rgba(192,57,43,0.1);   color: #922B21; }
+    .cat-purification { background: rgba(21,101,192,0.1);  color: #1565C0; }
+    .cat-funerals     { background: rgba(69,69,69,0.1);    color: #424242; }
+    .cat-hajj         { background: rgba(0,121,107,0.1);   color: #00695C; }
+    .cat-inheritance  { background: rgba(74,20,140,0.1);   color: #4A148C; }
+    .cat-endowments   { background: rgba(230,81,0,0.1);    color: #E65100; }
+    .cat-oaths        { background: rgba(1,87,155,0.1);    color: #01579B; }
+    .cat-general      { background: rgba(12,31,61,0.08);   color: var(--navy); }
+    .cat-prohibition  { background: rgba(120,40,140,0.1);  color: #6B2179; }
+    .fatwa-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+      color: var(--navy);
+      line-height: 1.35;
+    }
+    .fatwa-arabic-title {
+      font-family: 'Amiri', serif;
+      font-size: 0.95rem;
+      color: var(--gold-dark);
+      direction: rtl;
+      margin-bottom: 0.75rem;
+      line-height: 1.7;
+    }
+    .fatwa-excerpt {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .fatwa-card-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--off-white);
+    }
+    .fatwa-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      font-size: 0.77rem;
+      color: var(--text-muted);
+    }
+    .fatwa-meta-row span { display: flex; align-items: center; gap: 0.3rem; }
+    .fatwa-meta-row i { color: var(--gold); font-size: 0.72rem; }
+    .fatwa-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .kw-pill {
+      background: var(--navy);
+      color: rgba(255,255,255,0.8);
+      font-size: 0.68rem;
+      font-weight: 500;
+      padding: 0.18rem 0.6rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      font-family: 'Poppins', sans-serif;
+    }
+    .kw-pill:hover {
+      background: var(--gold);
+      color: var(--navy);
+    }
+
+    /* ---- Empty / Loading state ---- */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+    .no-results i { font-size: 3rem; color: var(--border); margin-bottom: 1rem; display: block; }
+    .loading-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem;
+      color: var(--text-muted);
+    }
+    .loading-state i { font-size: 2rem; color: var(--gold); margin-bottom: 1rem; display: block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Active keyword filter banner ---- */
+    .active-filter-banner {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--gold-pale);
+      border: 1px solid rgba(201,162,39,0.4);
+      border-radius: var(--radius);
+      padding: 0.6rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--navy);
+    }
+    .active-filter-banner.visible { display: flex; }
+    .active-filter-banner strong { color: var(--gold-dark); }
+    .clear-filter-link { margin-left: auto; color: var(--blue); cursor: pointer; font-weight: 600; font-size: 0.82rem; }
+
+    /* ---- Upload CTA ---- */
+    .upload-cta {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      margin-top: 3rem;
+      position: relative;
+      overflow: hidden;
+      flex-wrap: wrap;
+    }
+    .upload-cta::before {
+      content:'';
+      position:absolute;inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='rgba(201%2C162%2C39%2C0.08)' stroke-width='1'%3E%3Cpolygon points='30,4 35,20 52,15 42,29 55,38 38,40 35,57 30,43 25,57 22,40 5,38 18,29 8,15 25,20'/%3E%3C/g%3E%3C/svg%3E");
+      background-size:60px;
+    }
+    .upload-cta h3 { color: var(--white); margin-bottom: 0.3rem; position: relative; }
+    .upload-cta p { color: rgba(255,255,255,0.7); font-size: 0.88rem; margin: 0; position: relative; }
+    .upload-cta .btn { position: relative; flex-shrink: 0; }
+
+    @media (max-width: 1024px) { .fatwa-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .fatwa-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .iftaa-search-section { top: 0; } }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <div class="nav-logo">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4C20 4 8 10 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 10 20 4 20 4Z" fill="white" opacity="0.9"/>
+            <path d="M20 8L21.5 14H28L22.5 17.5L24.5 24L20 20.5L15.5 24L17.5 17.5L12 14H18.5Z" fill="#C9A227"/>
+            <circle cx="30" cy="8" r="4" fill="white" opacity="0.85"/>
+            <path d="M30 5.5C31.5 6.5 32 8 30 9C28.5 7.5 28 5.5 30 5.5Z" fill="#C9A227"/>
+          </svg>
+        </div>
+        <div class="nav-title">
+          <span>Darul Iftaa New York</span>
+          <span>Dept. of Darul Uloom New York</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li class="nav-dropdown">
+          <a href="about.html">About Us <i class="fas fa-chevron-down nav-caret"></i></a>
+          <div class="nav-dropdown-menu">
+            <a href="faculty.html"><i class="fas fa-user-graduate"></i> Faculty</a>
+            <a href="services.html"><i class="fas fa-hands-helping"></i> Services</a>
+            <a href="iftaa-course.html"><i class="fas fa-graduation-cap"></i> Iftaa Course</a>
+          </div>
+        </li>
+        <li><a href="iftaa.html" class="active">Fatawa</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="contact.html?subject=fatwa" class="nav-donate-btn">Ask A Question</a></li>
+      </ul>
+      <button class="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="faculty.html" class="mobile-sub-link">&nbsp;&nbsp;Faculty</a>
+      <a href="services.html" class="mobile-sub-link">&nbsp;&nbsp;Services</a>
+      <a href="iftaa-course.html" class="mobile-sub-link">&nbsp;&nbsp;Iftaa Course</a>
+      <a href="iftaa.html">Fatawa</a>
+      <a href="contact.html">Contact</a>
+      <a href="contact.html?subject=fatwa">Ask A Question</a>
+    </nav>
+  </nav>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero pattern-bg">
+    <div class="container">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Fatawa</span>
+      </div>
+      <p class="arabic" style="font-size:1.4rem;margin-bottom:0.5rem;">دَارُ الإِفْتَاء</p>
+      <h1>Fatawa</h1>
+      <p>Fatāwā (Islamic legal rulings) issued by our muftis, grounded in the Ḥanafī tradition and reviewed before publication.</p>
+    </div>
+  </section>
+
+  <!-- SEARCH & FILTER -->
+  <div class="iftaa-search-section">
+    <div class="container">
+      <div class="search-bar-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="fatwa-search" placeholder="Search by keyword, topic, or question…" autocomplete="off" />
+        <button id="clear-search" aria-label="Clear search">&times;</button>
+      </div>
+      <div class="category-filter-bar" id="category-filters">
+        <button class="cat-filter-btn active" data-cat="all">All Categories</button>
+        <button class="cat-filter-btn" data-cat="Salah"><i class="fas fa-pray"></i> Salah</button>
+        <button class="cat-filter-btn" data-cat="Zakaat"><i class="fas fa-hand-holding-heart"></i> Zakāt</button>
+        <button class="cat-filter-btn" data-cat="Sawm"><i class="fas fa-moon"></i> Sawm</button>
+        <button class="cat-filter-btn" data-cat="Purification"><i class="fas fa-droplet"></i> Purification</button>
+        <button class="cat-filter-btn" data-cat="Hajj & Umrah"><i class="fas fa-kaaba"></i> Hajj &amp; Umrah</button>
+        <button class="cat-filter-btn" data-cat="Marriage & Family"><i class="fas fa-heart"></i> Marriage</button>
+        <button class="cat-filter-btn" data-cat="Divorce"><i class="fas fa-heart-crack"></i> Divorce</button>
+        <button class="cat-filter-btn" data-cat="Business & Finance"><i class="fas fa-coins"></i> Business</button>
+        <button class="cat-filter-btn" data-cat="Food & Drink"><i class="fas fa-utensils"></i> Food &amp; Drink</button>
+        <button class="cat-filter-btn" data-cat="Funerals"><i class="fas fa-circle"></i> Funerals</button>
+        <button class="cat-filter-btn" data-cat="Inheritance"><i class="fas fa-scroll"></i> Inheritance</button>
+        <button class="cat-filter-btn" data-cat="Endowments"><i class="fas fa-hand-holding"></i> Endowments</button>
+        <button class="cat-filter-btn" data-cat="Oaths & Vows"><i class="fas fa-hands-praying"></i> Oaths &amp; Vows</button>
+        <button class="cat-filter-btn" data-cat="General"><i class="fas fa-circle-info"></i> General</button>
+        <button class="cat-filter-btn" data-cat="Prohibition & Permissibility"><i class="fas fa-ban"></i> Prohibition &amp; Permissibility</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <section class="iftaa-main">
+    <div class="container">
+      <div class="results-bar">
+        <p class="results-count">Showing <strong id="result-count">0</strong> fatwa(s)</p>
+        <select class="sort-select" id="sort-select">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="az">A–Z</option>
+        </select>
+      </div>
+
+      <!-- Active keyword filter indicator -->
+      <div class="active-filter-banner" id="filter-banner">
+        <i class="fas fa-tag" style="color:var(--gold);"></i>
+        Filtering by keyword: <strong id="active-keyword-label"></strong>
+        <span class="clear-filter-link" id="clear-keyword-filter">Clear filter &times;</span>
+      </div>
+
+      <!-- Fatwa cards rendered here -->
+      <div class="fatwa-grid" id="fatwa-grid">
+        <div class="loading-state">
+          <i class="fas fa-circle-notch"></i>
+          Loading fatāwā…
+        </div>
+      </div>
+
+      <!-- Upload CTA -->
+      <div class="upload-cta">
+        <div>
+          <h3>Have a Question for the Muftis?</h3>
+          <p>Submit your question to our scholars and receive a researched Islamic ruling.</p>
+        </div>
+        <a href="contact.html?subject=fatwa" class="btn btn-gold btn-lg">
+          <i class="fas fa-paper-plane"></i> Submit a Question
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="nav-logo" style="width:52px;height:52px;margin-bottom:1rem;">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 4C20 4 8 10 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 10 20 4 20 4Z" fill="white" opacity="0.9"/>
+              <path d="M20 8L21.5 14H28L22.5 17.5L24.5 24L20 20.5L15.5 24L17.5 17.5L12 14H18.5Z" fill="#C9A227"/>
+              <circle cx="30" cy="8" r="4" fill="white" opacity="0.85"/>
+              <path d="M30 5.5C31.5 6.5 32 8 30 9C28.5 7.5 28 5.5 30 5.5Z" fill="#C9A227"/>
+            </svg>
+          </div>
+          <h3>Darul Iftaa New York</h3>
+          <p class="tagline">Dept. of Darul Uloom New York</p>
+          <p>Providing free, confidential, and authentic Islamic legal rulings to the Muslim community of New York, rooted in the Quran and Sunnah.</p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+            <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+            <li><a href="faculty.html"><i class="fas fa-chevron-right"></i> Faculty</a></li>
+            <li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li>
+            <li><a href="iftaa-course.html"><i class="fas fa-chevron-right"></i> Iftaa Course</a></li>
+            <li><a href="iftaa.html"><i class="fas fa-chevron-right"></i> Fatawa</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Get Involved</h4>
+          <ul>
+            <li><a href="contact.html?subject=fatwa"><i class="fas fa-chevron-right"></i> Ask A Question</a></li>
+            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+            <li><a href="donate.html"><i class="fas fa-chevron-right"></i> Donate</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact Info</h4>
+          <div class="footer-contact-item"><i class="fas fa-map-marker-alt"></i><span>New York, NY, USA</span></div>
+          <div class="footer-contact-item"><i class="fas fa-phone"></i><a href="tel:+12125550142">(212) 555-0142</a></div>
+          <div class="footer-contact-item"><i class="fas fa-envelope"></i><a href="mailto:ifta@darululoomny.org">ifta@darululoomny.org</a></div>
+          <div class="footer-contact-item"><i class="fas fa-clock"></i><span>Mon&ndash;Fri: 9:00 AM &ndash; 5:00 PM</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; 2025 <span>Darul Iftaa New York</span>. All rights reserved. &nbsp;|&nbsp; A department of Darul Uloom New York.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  // ── State ─────────────────────────────────────────────────────────────────
+  let allFatwas = [];
+  let activeCategory = 'all';
+  let activeKeyword  = null;
+  let searchQuery    = '';
+  let sortOrder      = 'newest';
+
+  // ── Category → CSS class map ──────────────────────────────────────────────
+  const catClass = {
+    'Salah':              'cat-salah',
+    'Zakaat':             'cat-zakaat',
+    'Sawm':               'cat-sawm',
+    'Sawm (Fasting)':     'cat-sawm',
+    'Business & Finance': 'cat-business',
+    'Food & Drink':       'cat-food',
+    'Marriage & Family':  'cat-marriage',
+    'Divorce':            'cat-divorce',
+    'Purification':       'cat-purification',
+    'Funerals':            'cat-funerals',
+    'Hajj & Umrah':       'cat-hajj',
+    'Inheritance':        'cat-inheritance',
+    'Endowments':         'cat-endowments',
+    'Oaths & Vows':       'cat-oaths',
+    'General':            'cat-general',
+    'Prohibition & Permissibility': 'cat-prohibition'
+  };
+
+  // ── Strip HTML tags from a string ─────────────────────────────────────────
+  function stripHtml(html) {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    return d.textContent || '';
+  }
+
+  // ── Format date ───────────────────────────────────────────────────────────
+  function formatDate(str) {
+    const d = new Date(str);
+    return d.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  }
+
+  // ── Build a single fatwa card ─────────────────────────────────────────────
+  function buildCard(f) {
+    const excerpt = stripHtml(f.answer).slice(0, 160).trim() + '…';
+    const cls = catClass[f.category] || 'cat-general';
+    const writtenBy = f.written_by ? `<span><i class="fas fa-pen-nib"></i> ${f.written_by}</span>` : '';
+
+    return `
+      <a href="fatwa.html?slug=${f.slug}" class="fatwa-card">
+        <div class="fatwa-card-body">
+          <span class="fatwa-cat-badge ${cls}">
+            <i class="fas fa-scale-balanced"></i> ${f.category}
+          </span>
+          <h3>${f.title}</h3>
+          <p class="fatwa-excerpt">${excerpt}</p>
+        </div>
+        <div class="fatwa-card-footer">
+          <div class="fatwa-meta-row">
+            <span><i class="fas fa-calendar"></i> ${formatDate(f.date)}</span>
+            ${writtenBy}
+          </div>
+        </div>
+      </a>`;
+  }
+
+  // ── Filter & render ───────────────────────────────────────────────────────
+  function renderFatwas() {
+    let list = allFatwas.filter(f => !isHidden(f.slug));
+
+    if (sortOrder === 'newest') list.sort((a,b) => new Date(b.date) - new Date(a.date));
+    else if (sortOrder === 'oldest') list.sort((a,b) => new Date(a.date) - new Date(b.date));
+    else list.sort((a,b) => a.title.localeCompare(b.title));
+
+    if (activeCategory !== 'all')
+      list = list.filter(f => f.category === activeCategory);
+
+    if (activeKeyword)
+      list = list.filter(f => f.keywords.map(k => k.toLowerCase()).includes(activeKeyword.toLowerCase()));
+
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(f =>
+        f.title.toLowerCase().includes(q) ||
+        f.arabic_title.toLowerCase().includes(q) ||
+        f.question.toLowerCase().includes(q) ||
+        stripHtml(f.answer).toLowerCase().includes(q) ||
+        f.keywords.some(k => k.toLowerCase().includes(q)) ||
+        (f.mufti || '').toLowerCase().includes(q) ||
+        (f.written_by || '').toLowerCase().includes(q)
+      );
+    }
+
+    const grid = document.getElementById('fatwa-grid');
+    document.getElementById('result-count').textContent = list.length;
+
+    if (!list.length) {
+      grid.innerHTML = `<div class="no-results">
+        <i class="fas fa-scroll"></i>
+        <h3>No fatāwā found</h3>
+        <p>Try a different search term or category filter.</p>
+      </div>`;
+      return;
+    }
+    grid.innerHTML = list.map(buildCard).join('');
+  }
+
+  function filterByKeyword(kw, e) {
+    if (e) e.preventDefault();
+    activeKeyword = kw;
+    document.getElementById('active-keyword-label').textContent = kw;
+    document.getElementById('filter-banner').classList.add('visible');
+    renderFatwas();
+  }
+
+  async function loadFatwas() {
+    let jsonFatwas = [];
+    try {
+      const res = await fetch('data/fatwas.json');
+      const json = await res.json();
+      jsonFatwas = json.fatwas || [];
+    } catch(e) { jsonFatwas = []; }
+
+    const fbFatwas = await fbLoadFatwas();
+
+    const local      = fbFatwas || getLocal();
+    const deleted    = getDeleted();
+    const overrides  = getOverrides();
+    const hidden     = getHidden();
+    const localSlugs = new Set(local.map(f => f.slug));
+
+    if (fbFatwas) saveLocal(fbFatwas);
+
+    const processedJson = jsonFatwas
+      .filter(f => !deleted.includes(f.slug) && !localSlugs.has(f.slug))
+      .map(f => overrides[f.slug] ? { ...f, ...overrides[f.slug] } : f);
+
+    allFatwas = [...local, ...processedJson];
+    renderFatwas();
+  }
+
+  document.getElementById('fatwa-search').addEventListener('input', function() {
+    searchQuery = this.value.trim();
+    document.getElementById('clear-search').classList.toggle('visible', searchQuery.length > 0);
+    renderFatwas();
+  });
+
+  document.getElementById('clear-search').addEventListener('click', function() {
+    document.getElementById('fatwa-search').value = '';
+    searchQuery = '';
+    this.classList.remove('visible');
+    renderFatwas();
+  });
+
+  document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.cat-filter-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      activeCategory = this.dataset.cat;
+      renderFatwas();
+    });
+  });
+
+  document.getElementById('clear-keyword-filter').addEventListener('click', function() {
+    activeKeyword = null;
+    document.getElementById('filter-banner').classList.remove('visible');
+    renderFatwas();
+  });
+
+  document.getElementById('sort-select').addEventListener('change', function() {
+    sortOrder = this.value;
+    renderFatwas();
+  });
+
+  const urlCat = new URLSearchParams(window.location.search).get('cat');
+  if (urlCat) {
+    activeCategory = urlCat;
+    document.querySelectorAll('.cat-filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.cat === urlCat);
+    });
+  }
+
+  loadFatwas();
+
+  window.addEventListener('scroll', function() {
+    document.getElementById('back-to-top').classList.toggle('visible', window.scrollY > 400);
+  });
+  </script>
+
+  <script src="js/main.js"></script>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       ADMIN SYSTEM
+  ══════════════════════════════════════════════════════════════ -->
+
+  <button id="admin-fab" onclick="openAdminLogin()" title="Admin Login">
+    <i class="fas fa-lock"></i>
+  </button>
+
+  <div id="fatwa-preview-modal" class="fp-overlay" style="display:none;">
+    <div class="fp-modal">
+      <div class="fp-modal-topbar">
+        <span class="fp-modal-title"><i class="fas fa-eye"></i> Fatwa Preview</span>
+        <div class="fp-modal-actions">
+          <button class="fp-publish-btn" onclick="submitFromPreview()"><i class="fas fa-upload"></i> Publish</button>
+          <button class="fp-close-btn" onclick="closeFatwaPreview()"><i class="fas fa-times"></i> Close</button>
+        </div>
+      </div>
+      <div class="fp-modal-body">
+        <div class="fp-fields">
+          <h3 class="fp-section-head">Edit Fields</h3>
+          <div class="fp-field"><label>Title</label><input type="text" id="fp-title" /></div>
+          <div class="fp-field"><label>Category</label>
+            <select id="fp-category">
+              <option value="">— Select —</option>
+              <option>Salah</option><option>Zakaat</option><option value="Sawm">Sawm (Fasting)</option>
+              <option>Purification</option><option value="Hajj & Umrah">Hajj &amp; Umrah</option>
+              <option value="Marriage & Family">Marriage &amp; Family</option><option>Divorce</option>
+              <option value="Business & Finance">Business &amp; Finance</option>
+              <option value="Food & Drink">Food &amp; Drink</option><option>Funerals</option>
+              <option>Inheritance</option><option>Endowments</option>
+              <option value="Oaths & Vows">Oaths &amp; Vows</option><option>General</option>
+              <option value="Prohibition & Permissibility">Prohibition &amp; Permissibility</option>
+            </select>
+          </div>
+          <div class="fp-field"><label>Date</label><input type="date" id="fp-date" /></div>
+          <div class="fp-field"><label>Written By</label><input type="text" id="fp-written-by" /></div>
+          <div class="fp-field"><label>Question</label><div id="fp-question" class="fp-rich" contenteditable="true"></div></div>
+          <div class="fp-field"><label>Answer</label><div id="fp-answer" class="fp-rich fp-rich-tall" contenteditable="true"></div></div>
+          <div class="fp-field"><label>References</label><div id="fp-refs" class="fp-rich fp-rich-refs" contenteditable="true" dir="auto"></div></div>
+        </div>
+        <div class="fp-preview">
+          <h3 class="fp-section-head">Live Preview</h3>
+          <div class="fp-preview-card" id="fp-preview-card"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <div id="admin-login-modal" class="adm-overlay">
+    <div class="adm-modal">
+      <button class="adm-close" onclick="closeAdminLogin()"><i class="fas fa-times"></i></button>
+      <div class="adm-modal-logo"><i class="fas fa-mosque"></i></div>
+      <h2>Admin Login</h2>
+      <p class="adm-modal-sub">Darul Iftāʾ Management</p>
+      <div class="adm-error" id="login-error"><i class="fas fa-exclamation-circle"></i> Incorrect credentials.</div>
+      <div class="adm-field">
+        <label>Email</label>
+        <div class="adm-input-wrap"><i class="fas fa-user"></i><input type="email" id="adm-user" placeholder="Email" autocomplete="username" /></div>
+      </div>
+      <div class="adm-field">
+        <label>Password</label>
+        <div class="adm-input-wrap">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="adm-pass" placeholder="Password" autocomplete="current-password" />
+          <span class="adm-eye" onclick="toggleAdmPw()"><i class="fas fa-eye" id="adm-eye-icon"></i></span>
+        </div>
+      </div>
+      <button class="adm-login-btn" id="adm-login-btn" onclick="doAdminLogin()">
+        <span class="adm-btn-spinner" id="adm-spinner"></span>
+        <span id="adm-btn-text"><i class="fas fa-sign-in-alt"></i> Sign In</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="admin-panel" class="adm-panel">
+    <div class="adm-panel-topbar">
+      <div class="adm-panel-brand"><i class="fas fa-mosque"></i> Darul Iftāʾ Admin</div>
+      <div class="adm-panel-actions">
+        <button class="adm-tab-btn active" data-tab="upload" onclick="switchTab('upload')"><i class="fas fa-upload"></i> Upload</button>
+        <button class="adm-tab-btn" data-tab="manage" onclick="switchTab('manage')"><i class="fas fa-list"></i> Manage</button>
+        <button class="adm-logout-btn" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </div>
+    </div>
+
+    <div class="adm-panel-body">
+
+      <div id="tab-upload" class="adm-tab-content">
+        <div class="adm-tab-header">
+          <div>
+            <h2 id="form-mode-title"><i class="fas fa-upload"></i> Upload New Fatwa</h2>
+            <p id="form-mode-sub">Fill in all required fields and click Upload.</p>
+          </div>
+          <button type="button" id="cancel-edit-btn" class="adm-cancel-edit" onclick="cancelEdit()" style="display:none;">
+            <i class="fas fa-times"></i> Cancel Edit
+          </button>
+        </div>
+
+        <div class="adm-upload-success" id="upload-success">
+          <i class="fas fa-check-circle"></i>
+          <div>
+            <strong id="success-msg-text">Fatwa uploaded!</strong> It's now live on the Iftaa page.
+            <button class="adm-success-dismiss" onclick="dismissSuccess()">Dismiss</button>
+          </div>
+        </div>
+
+        <div class="pdf-drop-zone" id="pdf-drop-zone" onclick="document.getElementById('pdf-file-input').click()">
+          <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;" onchange="handlePdfUpload(this.files[0])" />
+          <div class="pdf-drop-icon"><i class="fas fa-file-pdf"></i></div>
+          <div class="pdf-drop-text">
+            <strong>Import from PDF</strong>
+            <span>Click or drag & drop a fatwa PDF — fields will be auto-filled for review</span>
+          </div>
+          <div class="pdf-drop-btn">Choose PDF</div>
+        </div>
+        <div class="pdf-parsing-status" id="pdf-parsing-status" style="display:none;">
+          <span class="pdf-spinner"></span> Parsing PDF…
+        </div>
+
+        <form id="adm-upload-form" novalidate>
+          <input type="hidden" id="u-edit-slug" value="" />
+          <div class="adm-form-grid">
+
+            <div class="adm-section">
+              <h3><i class="fas fa-file-pen"></i> Fatwa Details</h3>
+              <div class="adm-row full">
+                <div class="adm-fld"><label>Title <span class="req">*</span></label>
+                  <input type="text" id="u-title" placeholder="e.g. Ruling on Cryptocurrency Trading" required /></div>
+              </div>
+              <div class="adm-row full">
+                <div class="adm-fld"><label>Arabic Title</label>
+                  <input type="text" id="u-arabic" placeholder="e.g. حكم تداول العملات الرقمية" dir="auto" /></div>
+              </div>
+              <div class="adm-row three">
+                <div class="adm-fld"><label>Category <span class="req">*</span></label>
+                  <select id="u-category" required>
+                    <option value="">— Select —</option>
+                    <option>Salah</option><option>Zakaat</option><option value="Sawm">Sawm (Fasting)</option>
+                    <option>Purification</option><option value="Hajj & Umrah">Hajj &amp; Umrah</option>
+                    <option value="Marriage & Family">Marriage &amp; Family</option><option>Divorce</option>
+                    <option value="Business & Finance">Business &amp; Finance</option>
+                    <option value="Food & Drink">Food &amp; Drink</option><option>Funerals</option>
+                    <option>Inheritance</option><option>Endowments</option>
+                    <option value="Oaths & Vows">Oaths &amp; Vows</option><option>General</option>
+                    <option value="Prohibition & Permissibility">Prohibition &amp; Permissibility</option>
+                  </select></div>
+                <div class="adm-fld"><label>Date <span class="req">*</span></label>
+                  <input type="date" id="u-date" required /></div>
+                <div class="adm-fld"><label>Madhab</label>
+                  <select id="u-madhab">
+                    <option value="Hanafi">Hanafi</option><option>Shafi'i</option>
+                    <option>Maliki</option><option>Hanbali</option><option>General</option>
+                  </select></div>
+              </div>
+            </div>
+
+            <div class="adm-section">
+              <h3><i class="fas fa-user-pen"></i> Written By</h3>
+              <div class="adm-row full">
+                <div class="adm-fld"><label>Student Name <span class="req">*</span></label>
+                  <input type="text" id="u-student" placeholder="e.g. Abdurrahman Khan" required /></div>
+              </div>
+            </div>
+
+            <div class="adm-section">
+              <h3><i class="fas fa-question-circle"></i> Question</h3>
+              <div class="adm-fld">
+                <div id="u-question" class="adm-rich-editor" contenteditable="true" data-placeholder="Write the question as submitted…"></div>
+              </div>
+            </div>
+
+            <div class="adm-section">
+              <h3><i class="fas fa-scroll"></i> Answer</h3>
+              <div class="adm-fld">
+                <div id="u-answer" class="adm-rich-editor tall" contenteditable="true" data-placeholder="Paste or type the full fatwa answer. Bold, underline, and line breaks are preserved."></div>
+              </div>
+            </div>
+
+            <div class="adm-section">
+              <h3><i class="fas fa-tags"></i> Keywords <span style="font-weight:400;font-size:0.82rem;">(optional)</span></h3>
+              <div class="adm-fld">
+                <div class="adm-tag-wrap" id="adm-tag-wrap" onclick="document.getElementById('adm-kw-input').focus()">
+                  <input type="text" id="adm-kw-input" placeholder="Type keyword and press Enter…" />
+                </div>
+              </div>
+            </div>
+
+            <div class="adm-section">
+              <h3><i class="fas fa-book-open"></i> References <span style="font-weight:400;font-size:0.82rem;">(optional)</span></h3>
+              <div class="adm-fld">
+                <div id="u-refs" class="adm-rich-editor" contenteditable="true" dir="auto" data-placeholder="Type or paste each reference on its own line. Bold and underline are preserved.&#10;&#10;e.g.&#10;الفتاوى الهندية، الجزء الأول"></div>
+                <div class="adm-hint">Each line = one reference. Bold, underline, and Arabic are preserved.</div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="adm-form-footer">
+            <button type="submit" class="adm-upload-btn" id="adm-upload-btn">
+              <span class="adm-btn-spinner" id="upload-spinner"></span>
+              <span id="upload-btn-text"><i class="fas fa-upload"></i> Upload Fatwa</span>
+            </button>
+            <button type="button" class="adm-preview-btn" onclick="openFatwaPreview()"><i class="fas fa-eye"></i> Preview</button>
+            <button type="button" class="adm-clear-btn" onclick="clearUploadForm()"><i class="fas fa-undo"></i> Clear</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="tab-manage" class="adm-tab-content" style="display:none;">
+        <div class="adm-manage-header">
+          <h3>Uploaded Fatwas</h3>
+          <p>These fatwas are stored in your browser. To remove from all devices, also delete from <code>data/fatwas.json</code>.</p>
+        </div>
+        <div id="adm-fatwa-list"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+  #admin-fab {
+    position: fixed; bottom: 2rem; right: 2rem; width: 46px; height: 46px;
+    background: var(--navy); color: rgba(255,255,255,0.5); border: none;
+    border-radius: 50%; font-size: 0.9rem; cursor: pointer; z-index: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25); transition: color 0.2s, background 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #admin-fab:hover { color: var(--gold); background: #162d55; }
+
+  #back-to-top {
+    position: fixed; bottom: 2rem; left: 2rem; width: 46px; height: 46px;
+    background: var(--navy); color: rgba(255,255,255,0.6); border: none;
+    border-radius: 50%; font-size: 0.95rem; cursor: pointer; z-index: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    transition: opacity 0.25s, transform 0.25s, color 0.2s, background 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transform: translateY(10px);
+  }
+  #back-to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  #back-to-top:hover { color: var(--gold); background: #162d55; }
+
+  .adm-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.55); backdrop-filter: blur(3px);
+    z-index: 1000; display: none; align-items: center; justify-content: center; padding: 1rem;
+  }
+  .adm-overlay.open { display: flex; }
+
+  .adm-modal {
+    background: #fff; border-radius: 16px; padding: 2.5rem 2rem 2rem; width: 100%;
+    max-width: 400px; position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.3); text-align: center;
+  }
+  .adm-close {
+    position: absolute; top: 1rem; right: 1rem; background: #f0f0f0; border: none;
+    width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.85rem;
+    color: #777; display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+  }
+  .adm-close:hover { background: #ddd; }
+  .adm-modal-logo {
+    width: 54px; height: 54px; background: rgba(12,31,61,0.07); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+    font-size: 1.3rem; color: var(--navy);
+  }
+  .adm-modal h2 { font-family: 'Playfair Display',serif; color: var(--navy); font-size: 1.3rem; margin-bottom: 0.2rem; }
+  .adm-modal-sub { color: #999; font-size: 0.82rem; margin-bottom: 1.5rem; }
+  .adm-error {
+    display: none; background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626;
+    border-radius: 8px; padding: 0.55rem 0.85rem; font-size: 0.82rem; margin-bottom: 1rem;
+    align-items: center; gap: 0.4rem; text-align: left;
+  }
+  .adm-error.show { display: flex; }
+  .adm-field { margin-bottom: 1rem; text-align: left; }
+  .adm-field label { display: block; font-size: 0.77rem; font-weight: 600; color: #555; margin-bottom: 0.35rem; letter-spacing: 0.03em; text-transform: uppercase; }
+  .adm-input-wrap { position: relative; }
+  .adm-input-wrap > i { position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); color: #bbb; font-size: 0.82rem; pointer-events: none; }
+  .adm-input-wrap input {
+    width: 100%; padding: 0.72rem 2.5rem 0.72rem 2.3rem; border: 1.5px solid #e0e0e0; border-radius: 9px;
+    font-size: 0.9rem; font-family: 'Poppins',sans-serif; color: #333; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .adm-input-wrap input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,39,0.1); }
+  .adm-eye { position: absolute; right: 0.85rem; top: 50%; transform: translateY(-50%); cursor: pointer; color: #bbb; font-size: 0.82rem; }
+  .adm-login-btn {
+    width: 100%; padding: 0.8rem; background: var(--navy); color: #fff; border: none; border-radius: 9px;
+    font-size: 0.92rem; font-weight: 600; font-family: 'Poppins',sans-serif; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    transition: background 0.2s; margin-top: 0.5rem;
+  }
+  .adm-login-btn:hover { background: #1e3a8a; }
+
+  .adm-panel {
+    position: fixed; inset: 0; background: #f4f6f9; z-index: 1000; display: none;
+    flex-direction: column; overflow: hidden;
+  }
+  .adm-panel.open { display: flex; }
+
+  .adm-panel-topbar {
+    background: var(--navy); height: 58px; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 1.5rem; flex-shrink: 0;
+  }
+  .adm-panel-brand { color: #fff; font-family: 'Playfair Display',serif; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+  .adm-panel-brand i { color: var(--gold); }
+  .adm-panel-actions { display: flex; align-items: center; gap: 0.5rem; }
+  .adm-tab-btn {
+    background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.15);
+    padding: 0.38rem 0.9rem; border-radius: 6px; font-size: 0.8rem; font-weight: 500;
+    font-family: 'Poppins',sans-serif; cursor: pointer; display: flex; align-items: center; gap: 0.35rem;
+    transition: all 0.2s;
+  }
+  .adm-tab-btn.active, .adm-tab-btn:hover { background: var(--gold); border-color: var(--gold); color: #fff; }
+  .adm-logout-btn {
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.7);
+    padding: 0.38rem 0.9rem; border-radius: 6px; font-size: 0.8rem; font-family: 'Poppins',sans-serif;
+    cursor: pointer; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s;
+  }
+  .adm-logout-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+  .adm-panel-body { flex: 1; overflow-y: auto; }
+  .adm-tab-content { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+  .adm-section {
+    background: #fff; border: 1px solid #e8ecf0; border-radius: 12px; padding: 1.5rem 1.75rem;
+    margin-bottom: 1.25rem; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  }
+  .adm-section h3 {
+    font-family: 'Playfair Display',serif; color: var(--navy); font-size: 1rem; margin-bottom: 1.1rem;
+    padding-bottom: 0.75rem; border-bottom: 1px solid #e8ecf0; display: flex; align-items: center; gap: 0.5rem;
+  }
+  .adm-section h3 i { color: var(--gold); font-size: 0.9rem; }
+  .adm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+  .adm-row:last-child { margin-bottom: 0; }
+  .adm-row.full { grid-template-columns: 1fr; }
+  .adm-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .adm-fld { display: flex; flex-direction: column; gap: 0.38rem; }
+  .adm-fld label { font-size: 0.76rem; font-weight: 600; color: #555; letter-spacing: 0.03em; text-transform: uppercase; }
+  .adm-fld label .req { color: #e53e3e; }
+  .adm-fld input, .adm-fld select, .adm-fld textarea {
+    padding: 0.65rem 0.85rem; border: 1.5px solid #e0e4ea; border-radius: 8px; font-size: 0.88rem;
+    font-family: 'Poppins',sans-serif; color: #333; background: #fafbfc; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .adm-fld input:focus, .adm-fld select:focus, .adm-fld textarea:focus {
+    border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,39,0.1); background: #fff;
+  }
+  .adm-fld textarea { resize: vertical; min-height: 110px; line-height: 1.65; }
+  .adm-fld textarea.tall { min-height: 240px; }
+
+  .adm-tag-wrap {
+    border: 1.5px solid #e0e4ea; border-radius: 8px; padding: 0.4rem 0.75rem; display: flex; flex-wrap: wrap;
+    gap: 0.4rem; align-items: center; min-height: 42px; cursor: text; background: #fafbfc;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .adm-tag-wrap:focus-within { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,39,0.1); background: #fff; }
+  .adm-tag-wrap input { border: none; outline: none; font-size: 0.87rem; font-family: 'Poppins',sans-serif; flex: 1; min-width: 130px; background: transparent; }
+  .adm-kw-pill { background: var(--navy); color: rgba(255,255,255,0.85); padding: 0.18rem 0.6rem; border-radius: 20px; font-size: 0.75rem; display: flex; align-items: center; gap: 0.3rem; }
+  .adm-kw-pill button { background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; font-size: 0.78rem; padding: 0; line-height: 1; }
+  .adm-kw-pill button:hover { color: #fff; }
+
+  .adm-form-footer { display: flex; gap: 0.75rem; align-items: center; padding-top: 0.5rem; }
+  .adm-upload-btn {
+    background: var(--navy); color: #fff; border: none; padding: 0.8rem 2rem; border-radius: 8px;
+    font-size: 0.92rem; font-weight: 600; font-family: 'Poppins',sans-serif; cursor: pointer;
+    display: flex; align-items: center; gap: 0.5rem; transition: background 0.2s;
+  }
+  .adm-upload-btn:hover { background: #1e3a8a; }
+  .adm-clear-btn {
+    background: transparent; color: #888; border: 1.5px solid #ddd; padding: 0.8rem 1.4rem; border-radius: 8px;
+    font-size: 0.88rem; font-family: 'Poppins',sans-serif; cursor: pointer; transition: all 0.2s;
+  }
+  .adm-clear-btn:hover { border-color: #aaa; color: #444; }
+
+  .adm-upload-success {
+    display: none; background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem; align-items: center; gap: 0.75rem; font-size: 0.88rem; color: #166534;
+  }
+  .adm-upload-success.show { display: flex; }
+  .adm-upload-success i { font-size: 1.3rem; color: #16a34a; flex-shrink: 0; }
+  .adm-success-dismiss { background: none; border: none; color: #16a34a; font-weight: 600; cursor: pointer; margin-left: 0.5rem; font-size: 0.82rem; text-decoration: underline; font-family: 'Poppins',sans-serif; }
+
+  .adm-manage-header { margin-bottom: 1.5rem; }
+  .adm-manage-header h3 { font-family: 'Playfair Display',serif; color: var(--navy); font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .adm-manage-header p { font-size: 0.82rem; color: #888; }
+
+  .adm-list-item {
+    background: #fff; border: 1px solid #e8ecf0; border-radius: 10px; padding: 1rem 1.25rem; margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+  }
+  .adm-list-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .adm-list-title { flex: 1; font-size: 0.9rem; color: var(--navy); font-weight: 500; }
+  .adm-list-cat { font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 20px; background: rgba(12,31,61,0.07); color: var(--navy); white-space: nowrap; }
+  .adm-list-date { font-size: 0.75rem; color: #999; white-space: nowrap; }
+  .adm-list-btns { display: flex; gap: 0.4rem; }
+  .adm-list-info { flex: 1; min-width: 0; }
+  .adm-list-title { font-size: 0.9rem; color: var(--navy); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .adm-list-meta { font-size: 0.73rem; color: #999; margin-top: 0.15rem; }
+  .adm-list-btn { padding: 0.28rem 0.65rem; border-radius: 5px; font-size: 0.75rem; font-family: 'Poppins',sans-serif; cursor: pointer; border: none; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; }
+  .adm-list-view { background: var(--navy); color: #fff; }
+  .adm-list-edit { background: #eff6ff; color: #1d4ed8; }
+  .adm-list-edit:hover { background: #1d4ed8; color: #fff; }
+  .adm-list-del  { background: #fee2e2; color: #dc2626; }
+  .adm-list-del:hover { background: #dc2626; color: #fff; }
+  .adm-empty { text-align: center; padding: 3rem 1rem; color: #aaa; }
+  .adm-empty i { font-size: 2rem; display: block; margin-bottom: 0.6rem; }
+  .adm-src-badge { font-size: 0.65rem; padding: 0.1rem 0.45rem; border-radius: 20px; font-weight: 600; vertical-align: middle; margin-left: 0.3rem; }
+  .adm-src-local  { background: #dbeafe; color: #1d4ed8; }
+  .adm-src-json   { background: #dcfce7; color: #15803d; }
+  .adm-src-hidden { background: #fef9c3; color: #92400e; }
+  .adm-list-hide  { background: #fef3c7; color: #b45309; }
+  .adm-list-hide:hover { background: #b45309; color: #fff; }
+  .adm-list-show  { background: #dcfce7; color: #15803d; }
+  .adm-list-show:hover { background: #15803d; color: #fff; }
+  .adm-list-item-hidden { opacity: 0.55; }
+
+  .pdf-drop-zone {
+    border: 2px dashed #d0d5de; border-radius: 12px; background: #f8f9fc; padding: 1.4rem 1.5rem;
+    display: flex; align-items: center; gap: 1.25rem; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 1.5rem;
+  }
+  .pdf-drop-zone:hover, .pdf-drop-zone.drag-over { border-color: var(--gold); background: #fffdf4; }
+  .pdf-drop-icon { font-size: 2rem; color: #e53e3e; flex-shrink: 0; }
+  .pdf-drop-text { flex: 1; }
+  .pdf-drop-text strong { display: block; color: #1a1a2e; font-size: 0.95rem; margin-bottom: 0.2rem; }
+  .pdf-drop-text span { color: #888; font-size: 0.8rem; }
+  .pdf-drop-btn { background: var(--navy); color: #fff; border-radius: 8px; padding: 0.5rem 1.1rem; font-size: 0.82rem; font-weight: 600; white-space: nowrap; }
+  .pdf-parsing-status { display: flex; align-items: center; gap: 0.6rem; color: #666; font-size: 0.85rem; margin-bottom: 1rem; }
+  .pdf-spinner { width: 14px; height: 14px; border: 2px solid #ddd; border-top-color: var(--gold); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+
+  .adm-preview-btn { padding: 0.75rem 1.4rem; background: #f0fdf4; color: #15803d; border: 1.5px solid #bbf7d0; border-radius: 10px; font-size: 0.9rem; font-weight: 600; font-family: 'Poppins',sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem; transition: background 0.2s; }
+  .adm-preview-btn:hover { background: #15803d; color: #fff; border-color: #15803d; }
+
+  .fp-overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; align-items: stretch; }
+  .fp-modal { background: #f4f6fa; width: 100%; display: flex; flex-direction: column; }
+  .fp-modal-topbar { background: var(--navy); color: #fff; padding: 0.9rem 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .fp-modal-title { font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+  .fp-modal-actions { display: flex; gap: 0.6rem; }
+  .fp-publish-btn { background: var(--gold); color: var(--navy); border: none; border-radius: 8px; padding: 0.5rem 1.2rem; font-size: 0.85rem; font-weight: 700; font-family: 'Poppins',sans-serif; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
+  .fp-publish-btn:hover { background: #b8891e; }
+  .fp-close-btn { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.85rem; font-family: 'Poppins',sans-serif; cursor: pointer; }
+  .fp-close-btn:hover { background: rgba(255,255,255,0.2); }
+  .fp-modal-body { display: grid; grid-template-columns: 380px 1fr; flex: 1; overflow: hidden; }
+  .fp-fields { padding: 1.5rem; overflow-y: auto; background: #fff; border-right: 1px solid #e4e8ef; display: flex; flex-direction: column; gap: 1rem; }
+  .fp-preview { padding: 1.5rem; overflow-y: auto; }
+  .fp-section-head { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #888; margin-bottom: 0.75rem; }
+  .fp-field { display: flex; flex-direction: column; gap: 0.3rem; }
+  .fp-field label { font-size: 0.75rem; font-weight: 600; color: #555; }
+  .fp-field input, .fp-field select { border: 1.5px solid #e0e4ea; border-radius: 8px; padding: 0.55rem 0.8rem; font-size: 0.88rem; font-family: 'Poppins',sans-serif; color: #333; outline: none; }
+  .fp-field input:focus, .fp-field select:focus { border-color: var(--gold); }
+  .fp-rich { border: 1.5px solid #e0e4ea; border-radius: 8px; padding: 0.6rem 0.8rem; font-size: 0.88rem; font-family: 'Poppins',sans-serif; color: #333; min-height: 80px; outline: none; white-space: pre-wrap; line-height: 1.7; }
+  .fp-rich:focus { border-color: var(--gold); }
+  .fp-rich-tall { min-height: 160px; }
+  .fp-rich-refs { font-family: 'Amiri',serif; font-size: 1rem; line-height: 2; direction: auto; }
+
+  .fp-preview-card { background: #fff; border-radius: 12px; padding: 2rem 2.5rem; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+  .fp-preview-card .fatwa-question-box { background: linear-gradient(135deg, var(--navy), #1e3a8a); border-radius: 12px; padding: 2rem; margin-bottom: 2.5rem; position: relative; overflow: hidden; }
+  .fp-preview-card .question-label { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(201,162,39,0.2); border: 1px solid rgba(201,162,39,0.4); color: #f0d060; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.85rem; border-radius: 50px; margin-bottom: 1rem; }
+  .fp-preview-card .fatwa-question-text { color: rgba(255,255,255,0.92); font-size: 1.05rem; line-height: 1.8; font-style: italic; margin: 0; }
+  .fp-preview-card .answer-label { display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(201,162,39,0.12); border: 1px solid rgba(201,162,39,0.3); color: #8a6010; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.3rem 0.85rem; border-radius: 50px; margin-bottom: 1.25rem; }
+  .fp-preview-card .fatwa-answer-body { font-size: 0.97rem; line-height: 1.9; color: #444; }
+  .fp-preview-card .fatwa-answer-body p { margin-bottom: 1.1rem; }
+  .fp-preview-card .fatwa-answer-body strong { font-weight: 700; color: #0C1F3D; }
+  .fp-preview-card .fatwa-answer-body u { text-decoration: underline; }
+  .fp-preview-card .fp-refs-heading { font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin: 1.75rem 0 0.85rem; padding-top: 1.5rem; border-top: 2px solid #eee; }
+  .fp-preview-card .fp-refs-heading i { color: var(--gold); margin-right: 0.4rem; }
+  .fp-preview-card .fp-refs-body { font-family: 'Amiri',serif; font-size: 1.15rem; line-height: 2; color: #1a1a1a; white-space: pre-wrap; direction: auto; }
+  .fp-preview-card .fatwa-closing { margin-top: 2.5rem; border-top: 2px solid #eee; padding-top: 2rem; }
+  .fp-preview-card .allah-knows-best { font-family: 'Playfair Display',serif; font-size: 1.1rem; font-style: italic; color: var(--navy); margin-bottom: 1.75rem; display: flex; align-items: center; gap: 0.6rem; }
+  .fp-preview-card .allah-knows-best::before { content:''; display:inline-block; width:4px; height:1.2em; background:var(--gold); border-radius:2px; flex-shrink:0; }
+  .fp-preview-card .attribution-list { display: flex; flex-direction: column; gap: 1rem; }
+  .fp-preview-card .attr-role { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin-bottom: 0.15rem; }
+  .fp-preview-card .attr-name { font-family: 'Playfair Display',serif; font-size: 1rem; color: var(--navy); font-weight: 600; margin-bottom: 0.1rem; }
+  .fp-preview-card .attr-title { font-size: 0.83rem; color: #555; }
+  .fp-preview-card .fatwa-cat-badge { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.25rem 0.75rem; border-radius: 50px; margin-bottom: 0.85rem; }
+  .fp-preview-card .cat-salah{background:rgba(26,75,140,.1);color:#1A4B8C}
+  .fp-preview-card .cat-zakaat{background:rgba(201,162,39,.15);color:#9E7D18}
+  .fp-preview-card .cat-sawm{background:rgba(46,134,193,.12);color:#1A6090}
+  .fp-preview-card .cat-business{background:rgba(39,174,96,.12);color:#1E8449}
+  .fp-preview-card .cat-food{background:rgba(231,76,60,.1);color:#B03A2E}
+  .fp-preview-card .cat-marriage{background:rgba(155,89,182,.12);color:#7D3C98}
+  .fp-preview-card .cat-divorce{background:rgba(192,57,43,.1);color:#922B21}
+  .fp-preview-card .cat-purification{background:rgba(21,101,192,.1);color:#1565C0}
+  .fp-preview-card .cat-funerals{background:rgba(69,69,69,.1);color:#424242}
+  .fp-preview-card .cat-hajj{background:rgba(0,121,107,.1);color:#00695C}
+  .fp-preview-card .cat-inheritance{background:rgba(74,20,140,.1);color:#4A148C}
+  .fp-preview-card .cat-endowments{background:rgba(230,81,0,.1);color:#E65100}
+  .fp-preview-card .cat-oaths{background:rgba(1,87,155,.1);color:#01579B}
+  .fp-preview-card .cat-general{background:rgba(12,31,61,.08);color:#0C1F3D}
+  .fp-preview-card .cat-prohibition{background:rgba(120,40,140,.1);color:#6B2179}
+
+  .adm-tab-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; gap: 1rem; }
+  .adm-tab-header h2 { font-family: 'Playfair Display',serif; color: var(--navy); font-size: 1.3rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.5rem; }
+  .adm-tab-header h2 i { color: var(--gold); font-size: 1rem; }
+  .adm-tab-header p { font-size: 0.82rem; color: #888; }
+  .adm-cancel-edit {
+    background: #fff3cd; color: #856404; border: 1px solid #ffc107; padding: 0.45rem 1rem; border-radius: 7px;
+    font-size: 0.8rem; font-weight: 600; font-family: 'Poppins',sans-serif; cursor: pointer;
+    display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; transition: background 0.2s;
+  }
+  .adm-cancel-edit:hover { background: #ffc107; color: #333; }
+  .adm-hint { font-size: 0.75rem; color: #999; margin-top: 0.3rem; }
+
+  .adm-rich-editor {
+    border: 1.5px solid #e0e4ea; border-radius: 8px; padding: 0.7rem 0.9rem; font-size: 0.9rem;
+    font-family: 'Poppins', sans-serif; color: #333; background: #fafbfc; outline: none; min-height: 110px;
+    line-height: 1.7; transition: border-color 0.2s, box-shadow 0.2s; white-space: pre-wrap; overflow-y: auto;
+  }
+  .adm-rich-editor.tall { min-height: 260px; }
+  .adm-rich-editor:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,39,0.1); background: #fff; }
+  .adm-rich-editor:empty::before { content: attr(data-placeholder); color: #aaa; pointer-events: none; }
+  .adm-rich-editor b, .adm-rich-editor strong { font-weight: 700; }
+  .adm-rich-editor u { text-decoration: underline; }
+  .adm-rich-editor em, .adm-rich-editor i { font-style: italic; }
+
+  #u-refs { font-family: 'Amiri', serif; font-size: 1.05rem; line-height: 2; direction: auto; }
+
+  .adm-btn-spinner {
+    display: none; width: 15px; height: 15px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: adm-spin 0.7s linear infinite;
+  }
+  .loading .adm-btn-spinner { display: inline-block; }
+  .loading .adm-btn-hide { display: none; }
+  @keyframes adm-spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 600px) {
+    .adm-row, .adm-row.three { grid-template-columns: 1fr; }
+    .adm-tab-content { padding: 1.25rem 1rem 3rem; }
+    .adm-list-cat, .adm-list-date { display: none; }
+  }
+  </style>
+
+  <script>
+  function openAdminLogin() {
+    if (auth && auth.currentUser) { openPanel(); return; }
+    document.getElementById('admin-login-modal').classList.add('open');
+    setTimeout(() => document.getElementById('adm-user').focus(), 100);
+  }
+  function closeAdminLogin() {
+    document.getElementById('admin-login-modal').classList.remove('open');
+    document.getElementById('login-error').classList.remove('show');
+    document.getElementById('adm-user').value = '';
+    document.getElementById('adm-pass').value = '';
+  }
+  function toggleAdmPw() {
+    const inp = document.getElementById('adm-pass');
+    const eye = document.getElementById('adm-eye-icon');
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    eye.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+  }
+  document.getElementById('adm-pass').addEventListener('keydown', e => { if (e.key === 'Enter') doAdminLogin(); });
+  document.getElementById('adm-user').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('adm-pass').focus(); });
+
+  function doAdminLogin() {
+    const btn = document.getElementById('adm-login-btn');
+    const err = document.getElementById('login-error');
+    const email = document.getElementById('adm-user').value.trim();
+    const pass = document.getElementById('adm-pass').value;
+    if (!auth) {
+      err.textContent = 'Admin login unavailable — Firebase not connected.';
+      err.classList.add('show');
+      return;
+    }
+    err.classList.remove('show');
+    btn.classList.add('loading');
+    auth.signInWithEmailAndPassword(email, pass)
+      .then(() => { btn.classList.remove('loading'); closeAdminLogin(); openPanel(); })
+      .catch(() => {
+        btn.classList.remove('loading');
+        err.textContent = 'Incorrect credentials.';
+        err.classList.add('show');
+        document.getElementById('adm-pass').value = '';
+        document.getElementById('adm-pass').focus();
+      });
+  }
+
+  function openPanel() {
+    document.getElementById('admin-panel').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('u-date').value = new Date().toISOString().split('T')[0];
+    renderManageList();
+  }
+  function adminLogout() {
+    if (auth) auth.signOut();
+    document.getElementById('admin-panel').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.adm-tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.adm-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).style.display = 'block';
+    document.querySelector(`.adm-tab-btn[data-tab="${tab}"]`).classList.add('active');
+    if (tab === 'manage') renderManageList();
+  }
+
+  let admKeywords = [];
+  function admAddKw(v) {
+    v = v.trim().replace(/,$/, '').trim();
+    if (!v || admKeywords.includes(v)) return;
+    admKeywords.push(v); admRenderKw();
+  }
+  function admRemoveKw(i) { admKeywords.splice(i, 1); admRenderKw(); }
+  function admRenderKw() {
+    const wrap = document.getElementById('adm-tag-wrap');
+    const input = document.getElementById('adm-kw-input');
+    wrap.querySelectorAll('.adm-kw-pill').forEach(p => p.remove());
+    admKeywords.forEach((kw, i) => {
+      const pill = document.createElement('div');
+      pill.className = 'adm-kw-pill';
+      pill.innerHTML = `${esc(kw)}<button type="button" onclick="admRemoveKw(${i})">×</button>`;
+      wrap.insertBefore(pill, input);
+    });
+  }
+  document.getElementById('adm-kw-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); admAddKw(this.value); this.value = ''; }
+    else if (e.key === 'Backspace' && !this.value && admKeywords.length) admRemoveKw(admKeywords.length - 1);
+  });
+  document.getElementById('adm-kw-input').addEventListener('blur', function() {
+    if (this.value.trim()) { admAddKw(this.value); this.value = ''; }
+  });
+
+  function getRich(id) { return document.getElementById(id).innerHTML.trim(); }
+  function setRich(id, content) {
+    const hasHtml = /<[a-z][\s\S]*>/i.test(content || '');
+    if (!hasHtml && content) {
+      content = content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\r\n/g,'\n').replace(/\n/g,'<br>');
+    }
+    document.getElementById(id).innerHTML = content || '';
+  }
+  function clearRich(id) { document.getElementById(id).innerHTML = ''; }
+
+  function sanitizePastedHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    (function clean(node) {
+      const allowed = new Set(['STRONG','B','EM','I','U','BR','P','DIV','SPAN','UL','OL','LI']);
+      Array.from(node.childNodes).forEach(child => {
+        if (child.nodeType === 3) return;
+        if (child.nodeType === 1) {
+          if (!allowed.has(child.tagName)) {
+            while (child.firstChild) node.insertBefore(child.firstChild, child);
+            node.removeChild(child);
+          } else {
+            Array.from(child.attributes).forEach(a => { if (a.name !== 'dir') child.removeAttribute(a.name); });
+            clean(child);
+          }
+        }
+      });
+    })(div);
+    return div.innerHTML;
+  }
+
+  function setupRichEditor(id) {
+    const el = document.getElementById(id);
+    el.addEventListener('paste', function(e) {
+      e.preventDefault();
+      const html = e.clipboardData.getData('text/html');
+      const text = e.clipboardData.getData('text/plain');
+      let content;
+      if (html) { content = sanitizePastedHtml(html); }
+      else {
+        content = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\r\n/g,'\n').replace(/\n/g,'<br>');
+      }
+      document.execCommand('insertHTML', false, content);
+    });
+  }
+  setupRichEditor('u-question');
+  setupRichEditor('u-answer');
+  setupRichEditor('u-refs');
+
+  function getLocal()    { try { return JSON.parse(localStorage.getItem('duny_fatwas')    || '[]');  } catch { return []; } }
+  function saveLocal(a)  { localStorage.setItem('duny_fatwas', JSON.stringify(a)); }
+  function getDeleted()  { try { return JSON.parse(localStorage.getItem('duny_deleted')   || '[]');  } catch { return []; } }
+  function saveDeleted(a){ localStorage.setItem('duny_deleted', JSON.stringify(a)); }
+  function getOverrides(){ try { return JSON.parse(localStorage.getItem('duny_overrides') || '{}');  } catch { return {}; } }
+  function saveOverrides(o){ localStorage.setItem('duny_overrides', JSON.stringify(o)); }
+  function getHidden()   { try { return JSON.parse(localStorage.getItem('duny_hidden')    || '[]');  } catch { return []; } }
+  function saveHidden(a) { localStorage.setItem('duny_hidden', JSON.stringify(a)); }
+  function isHidden(slug){ return getHidden().includes(slug); }
+  function isLocalFatwa(slug){ return getLocal().some(f => f.slug === slug); }
+  function toSlug(s) { return s.toLowerCase().replace(/[^\w\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,''); }
+
+  document.getElementById('adm-upload-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const title    = document.getElementById('u-title').value.trim();
+    const arabic   = document.getElementById('u-arabic').value.trim();
+    const category = document.getElementById('u-category').value;
+    const date     = document.getElementById('u-date').value;
+    const madhab   = document.getElementById('u-madhab').value;
+    const student  = document.getElementById('u-student').value.trim();
+    const question = getRich('u-question');
+    const answer   = getRich('u-answer');
+    const refsHtml = getRich('u-refs');
+    const editSlug = document.getElementById('u-edit-slug').value;
+
+    if (!title || !category || !date || !student || !question || !answer) {
+      alert('Please fill in all required fields.'); return;
+    }
+
+    const references = refsHtml.trim();
+
+    const btn = document.getElementById('adm-upload-btn');
+    btn.classList.add('loading');
+    document.getElementById('upload-btn-text').style.display = 'none';
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      document.getElementById('upload-btn-text').style.display = '';
+      const isEdit = !!editSlug;
+
+      if (isEdit) {
+        const updated = { slug: editSlug, title, arabic_title: arabic, question, answer,
+          written_by: student, date, category, keywords: [...admKeywords], references, madhab };
+        if (isLocalFatwa(editSlug)) {
+          const arr = getLocal();
+          const idx = arr.findIndex(f => f.slug === editSlug);
+          if (idx >= 0) { updated.id = arr[idx].id; arr[idx] = updated; }
+          else arr.unshift(updated);
+          saveLocal(arr);
+          fbSaveFatwa(updated);
+        } else {
+          const overrides = getOverrides();
+          overrides[editSlug] = updated;
+          saveOverrides(overrides);
+        }
+        allFatwas = allFatwas.map(f => f.slug === editSlug ? updated : f);
+        document.getElementById('success-msg-text').textContent = 'Fatwa updated!';
+      } else {
+        const existing = getLocal();
+        const newId = existing.length ? Math.max(...existing.map(f => parseInt(f.id)||0)) + 1 : 100;
+        const slug = toSlug(title) || 'fatwa-' + newId;
+        const fatwa = { id: newId, slug, title, arabic_title: arabic, question, answer,
+          mufti: 'Darul Iftaa New York', written_by: student,
+          date, category, keywords: [...admKeywords], references, madhab };
+        saveLocal([fatwa, ...existing]);
+        fbSaveFatwa(fatwa);
+        allFatwas = [fatwa, ...allFatwas];
+        document.getElementById('success-msg-text').textContent = 'Fatwa uploaded!';
+      }
+
+      renderFatwas();
+      clearUploadForm();
+      document.getElementById('upload-success').classList.add('show');
+      document.getElementById('tab-upload').scrollTop = 0;
+    }, 600);
+  });
+
+  function clearUploadForm() {
+    document.getElementById('adm-upload-form').reset();
+    document.getElementById('u-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('u-edit-slug').value = '';
+    clearRich('u-question'); clearRich('u-answer'); clearRich('u-refs');
+    admKeywords = []; admRenderKw();
+    document.getElementById('upload-success').classList.remove('show');
+    document.getElementById('form-mode-title').innerHTML = '<i class="fas fa-upload"></i> Upload New Fatwa';
+    document.getElementById('form-mode-sub').textContent = 'Fill in all required fields and click Upload.';
+    document.getElementById('upload-btn-text').innerHTML = '<i class="fas fa-upload"></i> Upload Fatwa';
+    document.getElementById('cancel-edit-btn').style.display = 'none';
+  }
+  function dismissSuccess() { document.getElementById('upload-success').classList.remove('show'); }
+
+  function admEditFatwa(slug) {
+    const f = allFatwas.find(x => x.slug === slug);
+    if (!f) return;
+    switchTab('upload');
+    document.getElementById('u-title').value    = f.title || '';
+    document.getElementById('u-arabic').value   = f.arabic_title || '';
+    document.getElementById('u-category').value = f.category || '';
+    document.getElementById('u-date').value     = f.date || '';
+    document.getElementById('u-madhab').value   = f.madhab || 'Hanafi';
+    document.getElementById('u-student').value  = f.written_by || '';
+    setRich('u-question', f.question || '');
+    setRich('u-answer', f.answer || '');
+    setRich('u-refs', Array.isArray(f.references) ? f.references.join('<br>') : (f.references || ''));
+    document.getElementById('u-edit-slug').value = f.slug;
+    admKeywords = [...(f.keywords || [])]; admRenderKw();
+    document.getElementById('form-mode-title').innerHTML = '<i class="fas fa-pen"></i> Edit Fatwa';
+    document.getElementById('form-mode-sub').textContent = 'Editing existing fatwa. Click Save Changes when done.';
+    document.getElementById('upload-btn-text').innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    document.getElementById('cancel-edit-btn').style.display = 'flex';
+    document.getElementById('upload-success').classList.remove('show');
+    document.querySelector('#admin-panel .adm-panel-body').scrollTop = 0;
+  }
+  function cancelEdit() { clearUploadForm(); }
+
+  function renderManageList() {
+    const el = document.getElementById('adm-fatwa-list');
+    if (!allFatwas.length) {
+      el.innerHTML = '<div class="adm-empty"><i class="fas fa-inbox"></i>No fatwas yet.</div>'; return;
+    }
+    el.innerHTML = allFatwas.map(f => {
+      const local = isLocalFatwa(f.slug);
+      const badge = local ? '<span class="adm-src-badge adm-src-local">Local</span>' : '<span class="adm-src-badge adm-src-json">Published</span>';
+      const hidden = isHidden(f.slug);
+      const hideBtn = hidden
+        ? `<button class="adm-list-btn adm-list-show" onclick="admToggleHide('${f.slug}')"><i class="fas fa-eye"></i> Show</button>`
+        : `<button class="adm-list-btn adm-list-hide" onclick="admToggleHide('${f.slug}')"><i class="fas fa-eye-slash"></i> Hide</button>`;
+      const hiddenBadge = hidden ? '<span class="adm-src-badge adm-src-hidden">Hidden</span>' : '';
+      return `
+      <div class="adm-list-item${hidden ? ' adm-list-item-hidden' : ''}">
+        <div class="adm-list-dot"></div>
+        <div class="adm-list-info">
+          <div class="adm-list-title">${esc(f.title)} ${badge}${hiddenBadge}</div>
+          <div class="adm-list-meta">${esc(f.category)} &nbsp;·&nbsp; ${f.date}${f.written_by ? ' &nbsp;·&nbsp; ' + esc(f.written_by) : ''}</div>
+        </div>
+        <div class="adm-list-btns">
+          <a href="fatwa.html?slug=${encodeURIComponent(f.slug)}" target="_blank" class="adm-list-btn adm-list-view"><i class="fas fa-eye"></i> View</a>
+          <button class="adm-list-btn adm-list-edit" onclick="admEditFatwa('${f.slug}')"><i class="fas fa-pen"></i> Edit</button>
+          ${hideBtn}
+          <button class="adm-list-btn adm-list-del"  onclick="admDeleteFatwa('${f.slug}')"><i class="fas fa-trash"></i> Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function admToggleHide(slug) {
+    const hidden = getHidden();
+    if (hidden.includes(slug)) { saveHidden(hidden.filter(s => s !== slug)); }
+    else { hidden.push(slug); saveHidden(hidden); }
+    renderFatwas();
+    renderManageList();
+  }
+
+  function admDeleteFatwa(slug) {
+    if (!confirm('Delete this fatwa?')) return;
+    fbDeleteFatwa(slug);
+    if (isLocalFatwa(slug)) {
+      const arr = getLocal().filter(f => f.slug !== slug);
+      saveLocal(arr);
+    } else {
+      const del = getDeleted();
+      if (!del.includes(slug)) { del.push(slug); saveDeleted(del); }
+    }
+    allFatwas = allFatwas.filter(f => f.slug !== slug);
+    renderFatwas();
+    renderManageList();
+  }
+
+  let db = null;
+  let auth = null;
+  let pendingAdminHash = window.location.hash === '#admin';
+  if (pendingAdminHash) history.replaceState(null, '', window.location.pathname + window.location.search);
+
+  function initFirebase() {
+    if (typeof FIREBASE_ENABLED === 'undefined' || !FIREBASE_ENABLED) return;
+    if (typeof firebase === 'undefined') return;
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      auth = firebase.auth();
+      auth.onAuthStateChanged(user => {
+        if (user) { openPanel(); }
+        else if (pendingAdminHash) { pendingAdminHash = false; openAdminLogin(); }
+      });
+      console.log('[DUNY] Firebase connected');
+    } catch(e) { console.warn('[DUNY] Firebase init failed:', e.message); db = null; auth = null; }
+  }
+  initFirebase();
+
+  async function fbSaveFatwa(fatwa) {
+    if (!db) return;
+    try { await db.collection('fatwas').doc(fatwa.slug).set(fatwa); } catch(e) { console.warn('FB save failed:', e); }
+  }
+  async function fbDeleteFatwa(slug) {
+    if (!db) return;
+    try { await db.collection('fatwas').doc(slug).delete(); } catch(e) { console.warn('FB delete failed:', e); }
+  }
+  async function fbLoadFatwas() {
+    if (!db) return null;
+    try { const snap = await db.collection('fatwas').get(); return snap.docs.map(d => d.data()); }
+    catch(e) { console.warn('FB load failed:', e); return null; }
+  }
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  if (typeof pdfjsLib !== 'undefined') {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  (function() {
+    const zone = document.getElementById('pdf-drop-zone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault(); zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type === 'application/pdf') handlePdfUpload(file);
+    });
+  })();
+
+  async function handlePdfUpload(file) {
+    if (!file) return;
+    const status = document.getElementById('pdf-parsing-status');
+    status.style.display = 'flex';
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        let lastY = null, lineText = '';
+        for (const item of content.items) {
+          if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) { fullText += lineText + '\n'; lineText = ''; }
+          lineText += item.str;
+          lastY = item.transform[5];
+        }
+        if (lineText) fullText += lineText + '\n';
+        fullText += '\n';
+      }
+      const parsed = parseFatwaText(fullText);
+      fillFormFromParsed(parsed);
+      openFatwaPreview();
+    } catch(err) {
+      alert('Could not parse PDF. Please fill in the fields manually.\n\n' + err.message);
+    } finally {
+      status.style.display = 'none';
+      document.getElementById('pdf-file-input').value = '';
+    }
+  }
+
+  function parseFatwaText(text) {
+    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const Q_RE   = /^\s*(question|mas['’]alah|mas'ala|query|سوال|مسئلہ)\s*[:\-]?\s*$/i;
+    const A_RE   = /^\s*(answer|jawab|fatwa|ruling|جواب|فتوی)\s*[:\-]?\s*$/i;
+    const REF_RE = /^\s*(references?|sources?|bibliography|مصادر|مراجع)\s*[:\-]?\s*$/i;
+    const WB_RE  = /^\s*(written\s*by|prepared\s*by|student|compiled\s*by)\s*[:\-]?\s*/i;
+    const AB_RE  = /^\s*(approved\s*by|checked\s*by|verified\s*by)\s*[:\-]?\s*/i;
+    const Q_INLINE   = /^\s*(question|mas['’]alah|mas'ala|query)\s*[:]\s*/i;
+    const A_INLINE   = /^\s*(answer|jawab|fatwa|ruling)\s*[:]\s*/i;
+    const REF_INLINE = /^\s*(references?)\s*[:]\s*/i;
+    const WB_INLINE  = /^\s*(written\s*by|prepared\s*by|student)\s*[:]\s*/i;
+
+    let title = '', question = '', answer = '', refs = '', writtenBy = '';
+    let section = 'title';
+    const titleLines = [], qLines = [], aLines = [], rLines = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const raw = lines[i];
+      const trimmed = raw.trim();
+      if (Q_RE.test(trimmed))   { section = 'question'; continue; }
+      if (A_RE.test(trimmed))   { section = 'answer';   continue; }
+      if (REF_RE.test(trimmed)) { section = 'refs';     continue; }
+      if (Q_INLINE.test(trimmed))   { section = 'question'; qLines.push(trimmed.replace(Q_INLINE, '')); continue; }
+      if (A_INLINE.test(trimmed))   { section = 'answer';   aLines.push(trimmed.replace(A_INLINE, '')); continue; }
+      if (REF_INLINE.test(trimmed)) { section = 'refs';     rLines.push(trimmed.replace(REF_INLINE, '')); continue; }
+      if (WB_RE.test(trimmed) || WB_INLINE.test(trimmed)) {
+        writtenBy = trimmed.replace(WB_RE, '').replace(WB_INLINE, '').trim();
+        section = 'skip'; continue;
+      }
+      if (AB_RE.test(trimmed)) { section = 'skip'; continue; }
+      if (section === 'title')    titleLines.push(raw);
+      else if (section === 'question') qLines.push(raw);
+      else if (section === 'answer')   aLines.push(raw);
+      else if (section === 'refs')     rLines.push(raw);
+    }
+
+    const nonEmpty = titleLines.filter(l => l.trim());
+    title = nonEmpty.slice(0, 2).join(' ').trim();
+
+    if (!qLines.length && !aLines.length) {
+      title = nonEmpty[0] || '';
+      answer = lines.slice(1).join('\n').trim();
+    } else {
+      question = qLines.join('\n').trim();
+      answer   = aLines.join('\n').trim();
+    }
+    refs = rLines.filter(l => l.trim()).join('\n').trim();
+    return { title, question, answer, refs, writtenBy };
+  }
+
+  function fillFormFromParsed(p) {
+    document.getElementById('u-title').value   = p.title || '';
+    if (p.writtenBy) document.getElementById('u-student').value = p.writtenBy;
+    document.getElementById('u-date').value    = new Date().toISOString().split('T')[0];
+    setRich('u-question', p.question || '');
+    setRich('u-answer',   p.answer   || '');
+    setRich('u-refs',     p.refs ? p.refs.split('\n').filter(Boolean).join('<br>') : '');
+  }
+
+  function openFatwaPreview() {
+    document.getElementById('fp-title').value       = document.getElementById('u-title').value;
+    document.getElementById('fp-category').value    = document.getElementById('u-category').value;
+    document.getElementById('fp-date').value        = document.getElementById('u-date').value;
+    document.getElementById('fp-written-by').value  = document.getElementById('u-student').value;
+    document.getElementById('fp-question').innerHTML = document.getElementById('u-question').innerHTML;
+    document.getElementById('fp-answer').innerHTML   = document.getElementById('u-answer').innerHTML;
+    document.getElementById('fp-refs').innerHTML     = document.getElementById('u-refs').innerHTML;
+    renderFatwaPreviewCard();
+    ['fp-title','fp-category','fp-date','fp-written-by'].forEach(id => { document.getElementById(id).oninput = renderFatwaPreviewCard; });
+    ['fp-question','fp-answer','fp-refs'].forEach(id => { document.getElementById(id).oninput = renderFatwaPreviewCard; });
+    document.getElementById('fatwa-preview-modal').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeFatwaPreview() {
+    document.getElementById('u-title').value    = document.getElementById('fp-title').value;
+    document.getElementById('u-category').value = document.getElementById('fp-category').value;
+    document.getElementById('u-date').value     = document.getElementById('fp-date').value;
+    document.getElementById('u-student').value  = document.getElementById('fp-written-by').value;
+    document.getElementById('u-question').innerHTML = document.getElementById('fp-question').innerHTML;
+    document.getElementById('u-answer').innerHTML   = document.getElementById('fp-answer').innerHTML;
+    document.getElementById('u-refs').innerHTML     = document.getElementById('fp-refs').innerHTML;
+    document.getElementById('fatwa-preview-modal').style.display = 'none';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function submitFromPreview() {
+    closeFatwaPreview();
+    document.getElementById('adm-upload-form').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  }
+
+  function renderFatwaPreviewCard() {
+    const title     = document.getElementById('fp-title').value || 'Untitled Fatwa';
+    const category  = document.getElementById('fp-category').value || 'General';
+    const date      = document.getElementById('fp-date').value || '';
+    const writtenBy = document.getElementById('fp-written-by').value || 'Student';
+    const question  = document.getElementById('fp-question').innerHTML;
+    const answer    = document.getElementById('fp-answer').innerHTML;
+    const refsHtml  = document.getElementById('fp-refs').innerHTML.trim();
+
+    const catMap = {
+      'Salah':'cat-salah','Zakaat':'cat-zakaat','Sawm':'cat-sawm','Sawm (Fasting)':'cat-sawm',
+      'Business & Finance':'cat-business','Food & Drink':'cat-food','Marriage & Family':'cat-marriage',
+      'Divorce':'cat-divorce','Purification':'cat-purification','Funerals':'cat-funerals',
+      'Hajj & Umrah':'cat-hajj','Inheritance':'cat-inheritance','Endowments':'cat-endowments',
+      'Oaths & Vows':'cat-oaths','General':'cat-general','Prohibition & Permissibility':'cat-prohibition'
+    };
+    const cls = catMap[category] || 'cat-general';
+    const dateStr = date ? new Date(date + 'T12:00:00').toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '';
+
+    const refsBlock = refsHtml.replace(/<[^>]+>/g,'').trim() ? `
+      <h4 class="fp-refs-heading"><i class="fas fa-book-open"></i> References</h4>
+      <div class="fp-refs-body">${refsHtml}</div>` : '';
+
+    document.getElementById('fp-preview-card').innerHTML = `
+      <span class="fatwa-cat-badge ${cls}"><i class="fas fa-scale-balanced"></i> ${esc(category)}</span>
+      <h1 style="font-family:'Playfair Display',serif;font-size:1.7rem;color:var(--navy);margin-bottom:0.4rem;line-height:1.3;">${esc(title)}</h1>
+      ${dateStr ? `<p style="font-size:0.82rem;color:#888;margin-bottom:2rem;">${dateStr}</p>` : ''}
+
+      <div class="fatwa-question-box">
+        <span class="question-label"><i class="fas fa-question-circle"></i> The Question</span>
+        <div class="fatwa-question-text">${question || '<em>No question entered</em>'}</div>
+      </div>
+
+      <span class="answer-label"><i class="fas fa-check-circle"></i> The Answer</span>
+      <div class="fatwa-answer-body">${answer || '<em style="color:#aaa">No answer entered</em>'}</div>
+
+      ${refsBlock}
+
+      <div class="fatwa-closing">
+        <p class="allah-knows-best">And Allah ﷻ knows best.</p>
+        <div class="attribution-list">
+          <div class="attr-entry">
+            <div class="attr-role">Written by</div>
+            <div class="attr-name">${esc(writtenBy)}</div>
+            <div class="attr-title">Student, Darul Iftā, Darul Uloom New York</div>
+          </div>
+          <div class="attr-entry">
+            <div class="attr-role">Checked &amp; Approved by</div>
+            <div class="attr-name">Mufti Mizanur Rahman</div>
+            <div class="attr-title">Head Mufti, Darul Iftāʾ</div>
+          </div>
+          <div class="attr-entry">
+            <div class="attr-role">Checked &amp; Approved by</div>
+            <div class="attr-name">Mufti Manzoor Ahmad</div>
+            <div class="attr-title">Mufti, Darul Iftāʾ</div>
+          </div>
+        </div>
+      </div>`;
+  }
+  </script>
+</body>
+</html>
