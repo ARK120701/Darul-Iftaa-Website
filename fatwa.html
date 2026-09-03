@@ -28,7 +28,6 @@
     }
     .fatwa-back-link:hover { color: var(--gold-dark); }
     .fatwa-detail-title { font-size: clamp(1.5rem, 3vw, 1.9rem); color: var(--navy); margin-bottom: .3rem; line-height: 1.3; }
-    .fatwa-arabic-title { font-family: 'Amiri', serif; color: var(--gold-dark); font-size: 1.15rem; margin-bottom: .5rem; direction: rtl; }
     .fatwa-detail-date { font-size: .82rem; color: var(--text-muted); margin-bottom: 2rem; }
 
     .fatwa-cat-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: .25rem .75rem; border-radius: 50px; margin-bottom: .85rem; }
@@ -206,7 +205,7 @@
           <h4>Contact Info</h4>
           <div class="footer-contact-item"><i class="fas fa-map-marker-alt"></i><span>New York, NY, USA</span></div>
           <div class="footer-contact-item"><i class="fas fa-phone"></i><a href="tel:+12125550142">(212) 555-0142</a></div>
-          <div class="footer-contact-item"><i class="fas fa-envelope"></i><a href="mailto:ifta@darululoomny.org">ifta@darululoomny.org</a></div>
+          <div class="footer-contact-item"><i class="fas fa-envelope"></i><a href="mailto:fatwa@duny.us">fatwa@duny.us</a></div>
           <div class="footer-contact-item"><i class="fas fa-clock"></i><span>Mon&ndash;Fri: 9:00 AM &ndash; 5:00 PM</span></div>
         </div>
       </div>
@@ -285,7 +284,6 @@
     document.getElementById('fatwa-detail').innerHTML = `
       <span class="fatwa-cat-badge ${cls}"><i class="fas fa-scale-balanced"></i> ${esc(f.category)}</span>
       <h1 class="fatwa-detail-title">${esc(f.title)}</h1>
-      ${f.arabic_title ? `<p class="fatwa-arabic-title">${esc(f.arabic_title)}</p>` : ''}
       <p class="fatwa-detail-date">${formatDate(f.date)}</p>
 
       <div class="fatwa-question-box">
