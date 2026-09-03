@@ -13,6 +13,7 @@
   <script src="js/firebase-config.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="js/fatwa-data.js"></script>
   <style>
     .fatwa-detail-section { padding: 3rem 0 5rem; }
     .fatwa-detail-card {
@@ -73,6 +74,28 @@
     .fatwa-share { display: flex; gap: .6rem; margin-top: 2.5rem; }
     .fatwa-share a, .fatwa-share button { background: var(--off-white); border: 1px solid var(--border); color: var(--text-muted); padding: .5rem 1rem; border-radius: 50px; font-size: .8rem; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; }
     .fatwa-share a:hover, .fatwa-share button:hover { border-color: var(--gold); color: var(--gold-dark); }
+
+    /* ---- Serial number + prev/next navigation (bottom of every fatwa page) ---- */
+    .fatwa-serial-line {
+      text-align: center; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-muted); margin: 3rem auto 1rem; max-width: 820px;
+    }
+    .fatwa-serial-line span { color: var(--navy); }
+    .fatwa-pager {
+      max-width: 820px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    @media (max-width: 640px) { .fatwa-pager { grid-template-columns: 1fr; } }
+    .fatwa-pager-link, .fatwa-pager-empty {
+      display: flex; align-items: center; gap: .85rem; background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.1rem 1.3rem; transition: var(--transition); min-height: 76px;
+    }
+    .fatwa-pager-link:hover { border-color: var(--gold); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .fatwa-pager-empty { opacity: .4; }
+    .fatwa-pager-next { justify-content: flex-end; text-align: right; }
+    .fatwa-pager-icon { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--gold-pale); color: var(--gold-dark); display: flex; align-items: center; justify-content: center; font-size: .85rem; }
+    .fatwa-pager-text { min-width: 0; }
+    .fatwa-pager-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .2rem; }
+    .fatwa-pager-title { font-size: .9rem; font-weight: 600; color: var(--navy); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   </style>
 </head>
 <body>
@@ -131,6 +154,9 @@
           <p>Loading fatwa&hellip;</p>
         </div>
       </div>
+
+      <p class="fatwa-serial-line" id="fatwa-serial-line" style="display:none;"></p>
+      <nav class="fatwa-pager" id="fatwa-pager" style="display:none;"></nav>
     </div>
   </section>
 
@@ -202,32 +228,11 @@
     'Oaths & Vows':'cat-oaths','General':'cat-general','Prohibition & Permissibility':'cat-prohibition'
   };
 
-  function getLocal()     { try { return JSON.parse(localStorage.getItem('duny_fatwas')    || '[]'); } catch { return []; } }
-  function getOverrides() { try { return JSON.parse(localStorage.getItem('duny_overrides') || '{}'); } catch { return {}; } }
-  function getDeleted()   { try { return JSON.parse(localStorage.getItem('duny_deleted')   || '[]'); } catch { return []; } }
-
   function esc(s) { return (s || '').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function formatDate(str) {
     if (!str) return '';
     const d = new Date(str + 'T12:00:00');
     return isNaN(d) ? str : d.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
-  }
-
-  let db = null;
-  function initFirebase() {
-    if (typeof FIREBASE_ENABLED === 'undefined' || !FIREBASE_ENABLED) return;
-    if (typeof firebase === 'undefined') return;
-    try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.firestore(); }
-    catch(e) { console.warn('[DUNY] Firebase init failed:', e.message); db = null; }
-  }
-  initFirebase();
-
-  async function fbLoadFatwa(slug) {
-    if (!db) return null;
-    try {
-      const doc = await db.collection('fatwas').doc(slug).get();
-      return doc.exists ? doc.data() : null;
-    } catch(e) { console.warn('FB load failed:', e); return null; }
   }
 
   function renderNotFound() {
@@ -238,6 +243,35 @@
         <p style="color:var(--text-muted);margin-bottom:1.5rem;">This fatwa may have been moved or removed.</p>
         <a href="iftaa.html" class="btn btn-navy"><i class="fas fa-arrow-left"></i> Browse Fatawa</a>
       </div>`;
+    document.getElementById('fatwa-serial-line').style.display = 'none';
+    document.getElementById('fatwa-pager').style.display = 'none';
+  }
+
+  // ── Serial number + prev/next, using the same canonical (oldest-first) order as the cards ──
+  function renderPager(ordered, index) {
+    const total = ordered.length;
+    document.getElementById('fatwa-serial-line').innerHTML =
+      `Fatwa <span>No. ${index + 1}</span> of <span>${total}</span>`;
+    document.getElementById('fatwa-serial-line').style.display = 'block';
+
+    const prev = index > 0 ? ordered[index - 1] : null;
+    const next = index < total - 1 ? ordered[index + 1] : null;
+
+    function side(f, label, dir) {
+      if (!f) return `<div class="fatwa-pager-empty${dir === 'next' ? ' fatwa-pager-next' : ''}"></div>`;
+      const icon = dir === 'prev' ? '<i class="fas fa-arrow-left"></i>' : '<i class="fas fa-arrow-right"></i>';
+      const inner = `
+        <div class="fatwa-pager-text">
+          <div class="fatwa-pager-label">${label}</div>
+          <div class="fatwa-pager-title">${esc(f.title)}</div>
+        </div>`;
+      const iconEl = `<span class="fatwa-pager-icon">${icon}</span>`;
+      return `<a href="fatwa.html?slug=${encodeURIComponent(f.slug)}" class="fatwa-pager-link${dir === 'next' ? ' fatwa-pager-next' : ''}">${dir === 'prev' ? iconEl + inner : inner + iconEl}</a>`;
+    }
+
+    document.getElementById('fatwa-pager').innerHTML =
+      side(prev, 'Previous Fatwa', 'prev') + side(next, 'Next Fatwa', 'next');
+    document.getElementById('fatwa-pager').style.display = 'grid';
   }
 
   function renderFatwa(f) {
@@ -294,30 +328,22 @@
     const slug = new URLSearchParams(window.location.search).get('slug');
     if (!slug) { renderNotFound(); return; }
 
-    const deleted = getDeleted();
-    if (deleted.includes(slug)) { renderNotFound(); return; }
+    const all = await DunyFatwaData.loadAllFatwas();
+    const found = all.find(f => f.slug === slug);
+    if (!found) { renderNotFound(); return; }
 
-    // 1) locally-created fatwas (this browser's admin uploads not yet synced)
-    const local = getLocal().find(f => f.slug === slug);
-    if (local) { renderFatwa(local); return; }
+    renderFatwa(found);
 
-    // 2) Firestore (synced admin uploads/edits)
-    const fromFirestore = await fbLoadFatwa(slug);
-    if (fromFirestore) { renderFatwa(fromFirestore); return; }
-
-    // 3) seed data/fatwas.json, with any saved edit overrides applied
-    try {
-      const res = await fetch('data/fatwas.json');
-      const json = await res.json();
-      const seed = (json.fatwas || []).find(f => f.slug === slug);
-      if (seed) {
-        const overrides = getOverrides();
-        renderFatwa(overrides[slug] ? { ...seed, ...overrides[slug] } : seed);
-        return;
-      }
-    } catch(e) { /* fall through to not-found */ }
-
-    renderNotFound();
+    // Serial number + prev/next only make sense within the public (non-hidden) archive —
+    // an admin previewing a hidden fatwa still sees the content, just no pager.
+    const ordered = DunyFatwaData.canonicalOrder(all);
+    const index = ordered.findIndex(f => f.slug === slug);
+    if (index === -1) {
+      document.getElementById('fatwa-serial-line').style.display = 'none';
+      document.getElementById('fatwa-pager').style.display = 'none';
+      return;
+    }
+    renderPager(ordered, index);
   }
   loadAndRender();
   </script>

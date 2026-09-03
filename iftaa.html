@@ -175,6 +175,18 @@
       border-radius: 50px;
       margin-bottom: 0.85rem;
     }
+    .fatwa-serial-badge {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--off-white);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 0.2rem 0.65rem;
+      font-family: 'Poppins', sans-serif;
+      white-space: nowrap;
+    }
     .cat-salah        { background: rgba(26,75,140,0.1);   color: #1A4B8C; }
     .cat-zakaat       { background: rgba(201,162,39,0.15); color: #9E7D18; }
     .cat-sawm         { background: rgba(46,134,193,0.12); color: #1A6090; }
@@ -509,6 +521,21 @@
   let activeKeyword  = null;
   let searchQuery    = '';
   let sortOrder      = 'newest';
+  let serialMap      = {};   // slug -> stable archive number, oldest fatwa = No. 1
+
+  // ── Stable serial numbers: oldest fatwa first, independent of the sort/filter in view ──
+  function rebuildSerialMap() {
+    const ordered = allFatwas
+      .filter(f => !isHidden(f.slug))
+      .slice()
+      .sort((a, b) => {
+        const d = new Date(a.date) - new Date(b.date);
+        if (d !== 0) return d;
+        return (a.slug || '').localeCompare(b.slug || '');
+      });
+    serialMap = {};
+    ordered.forEach((f, i) => { serialMap[f.slug] = i + 1; });
+  }
 
   // ── Category → CSS class map ──────────────────────────────────────────────
   const catClass = {
@@ -549,12 +576,17 @@
     const cls = catClass[f.category] || 'cat-general';
     const writtenBy = f.written_by ? `<span><i class="fas fa-pen-nib"></i> ${f.written_by}</span>` : '';
 
+    const num = serialMap[f.slug];
+
     return `
       <a href="fatwa.html?slug=${f.slug}" class="fatwa-card">
         <div class="fatwa-card-body">
-          <span class="fatwa-cat-badge ${cls}">
-            <i class="fas fa-scale-balanced"></i> ${f.category}
-          </span>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;">
+            <span class="fatwa-cat-badge ${cls}">
+              <i class="fas fa-scale-balanced"></i> ${f.category}
+            </span>
+            ${num ? `<span class="fatwa-serial-badge">No. ${num}</span>` : ''}
+          </div>
           <h3>${f.title}</h3>
           <p class="fatwa-excerpt">${excerpt}</p>
         </div>
@@ -569,6 +601,7 @@
 
   // ── Filter & render ───────────────────────────────────────────────────────
   function renderFatwas() {
+    rebuildSerialMap();
     let list = allFatwas.filter(f => !isHidden(f.slug));
 
     if (sortOrder === 'newest') list.sort((a,b) => new Date(b.date) - new Date(a.date));
