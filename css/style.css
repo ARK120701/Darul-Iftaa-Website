@@ -319,7 +319,7 @@ p  { margin-bottom: 1rem; }
 .hero-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, var(--navy) 0%, #112952 50%, #1a4b8c 100%);
+  background: linear-gradient(135deg, rgba(12,31,61,.87) 0%, rgba(17,41,82,.82) 50%, rgba(26,75,140,.78) 100%), url('../FrontHomePagePic.webp') center/cover no-repeat;
   z-index: 0;
 }
 .hero-pattern {
