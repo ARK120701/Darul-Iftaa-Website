@@ -153,18 +153,21 @@
         <!-- FORM COLUMN -->
         <div class="contact-form-card">
           <h3>Submit Your Question</h3>
-          <form id="contact-form" action="#" novalidate>
+          <form id="contact-form" action="https://formsubmit.co/ajax/fatwa@duny.us" method="POST" novalidate>
+            <input type="hidden" name="_subject" value="New question — Darul Iftaa New York" />
+            <input type="hidden" name="_template" value="table" />
+            <input type="hidden" name="_captcha" value="false" />
             <div class="form-group">
               <label for="full-name">Full Name *</label>
-              <input type="text" id="full-name" class="form-control" placeholder="Ahmad Khan" required />
+              <input type="text" id="full-name" name="Full Name" class="form-control" placeholder="Ahmad Khan" required />
             </div>
             <div class="form-group">
               <label for="email">Email Address *</label>
-              <input type="email" id="email" class="form-control" placeholder="ahmad@example.com" required />
+              <input type="email" id="email" name="Email" class="form-control" placeholder="ahmad@example.com" required />
             </div>
             <div class="form-group">
               <label for="category">Category *</label>
-              <select id="category" class="form-control" required>
+              <select id="category" name="Category" class="form-control" required>
                 <option value="" disabled selected>Select a category...</option>
                 <option value="Salah">Salah</option>
                 <option value="Zakaat">Zakaat</option>
@@ -185,7 +188,7 @@
             </div>
             <div class="form-group">
               <label for="question">Your Question *</label>
-              <textarea id="question" class="form-control" placeholder="Write your question in as much detail as possible..." required></textarea>
+              <textarea id="question" name="Question" class="form-control" placeholder="Write your question in as much detail as possible..." required></textarea>
             </div>
             <div class="form-group" style="margin-bottom: 0;">
               <label style="display: flex; align-items: flex-start; gap: 0.6rem; cursor: pointer; font-weight: 400; color: var(--text-muted); font-size: 0.85rem;">

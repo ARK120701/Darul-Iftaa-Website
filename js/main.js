@@ -75,21 +75,40 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ---- Contact form submission ---- */
+  /* ---- Contact form submission (sends to fatwa@duny.us via FormSubmit) ---- */
   const contactForm = document.getElementById('contact-form');
   contactForm?.addEventListener('submit', (e) => {
     e.preventDefault();
     const btn = contactForm.querySelector('button[type="submit"]');
     const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-check"></i> Message Sent!';
-    btn.style.background = '#2ecc71';
+    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
     btn.disabled = true;
-    setTimeout(() => {
-      btn.innerHTML = original;
-      btn.style.background = '';
-      btn.disabled = false;
-      contactForm.reset();
-    }, 3500);
+
+    fetch(contactForm.action, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json' },
+      body: new FormData(contactForm)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Request failed');
+        btn.innerHTML = '<i class="fas fa-check"></i> Message Sent!';
+        btn.style.background = '#2ecc71';
+        setTimeout(() => {
+          btn.innerHTML = original;
+          btn.style.background = '';
+          btn.disabled = false;
+          contactForm.reset();
+        }, 3500);
+      })
+      .catch(() => {
+        btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Couldn\'t send — try again';
+        btn.style.background = '#e74c3c';
+        setTimeout(() => {
+          btn.innerHTML = original;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 4000);
+      });
   });
 
   /* ---- Donate form submission ---- */
