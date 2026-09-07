@@ -51,6 +51,7 @@
     .question-label { display: inline-flex; align-items: center; gap: .5rem; background: var(--navy); border: 1px solid var(--navy); color: var(--gold-light); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .85rem; border-radius: 50px; margin-bottom: 1rem; }
     .fatwa-question-text { color: var(--navy); font-size: 1.05rem; line-height: 1.8; margin: 0; }
     .answer-label { display: inline-flex; align-items: center; gap: .5rem; background: rgba(176,141,59,.12); border: 1px solid rgba(176,141,59,.3); color: var(--gold-dark); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .85rem; border-radius: 50px; margin-bottom: 1.25rem; }
+    .fatwa-answer-arabic { text-align: center; direction: rtl; color: var(--gold-dark); font-weight: 700; margin: 0 0 1.5rem; }
     .fatwa-answer-body { font-size: .97rem; line-height: 1.9; color: #444; }
     .fatwa-answer-body p { margin-bottom: 1.1rem; }
     .fatwa-answer-body strong { font-weight: 700; color: var(--navy); }
@@ -294,6 +295,7 @@
       </div>
 
       <span class="answer-label"><i class="fas fa-check-circle"></i> The Answer</span>
+      <p class="fatwa-answer-arabic">الجواب بملهم الصدق و الصواب</p>
       <div class="fatwa-answer-body">${f.answer || '<em>No answer recorded.</em>'}</div>
 
       <div class="fatwa-closing">
