@@ -319,7 +319,11 @@ p  { margin-bottom: 1rem; }
 .hero-bg {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(12,31,61,.87) 0%, rgba(17,41,82,.82) 50%, rgba(26,75,140,.78) 100%), url('../FrontHomePagePic.webp') center/cover no-repeat;
+  background-color: var(--navy);
+  background-image: linear-gradient(135deg, rgba(12,31,61,.87) 0%, rgba(17,41,82,.82) 50%, rgba(26,75,140,.78) 100%), url('../FrontHomePagePic.webp');
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-size: cover, contain;
   z-index: 0;
 }
 .hero-pattern {
