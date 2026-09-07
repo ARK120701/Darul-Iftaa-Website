@@ -17,9 +17,9 @@
   <style>
     .fatwa-detail-section { padding: 3rem 0 5rem; }
     .fatwa-detail-card {
-      max-width: 820px; margin: 0 auto; background: var(--white);
+      max-width: 1080px; margin: 0 auto; background: var(--white);
       border-radius: var(--radius-lg); border: 1px solid var(--border);
-      box-shadow: var(--shadow); padding: 2.5rem 2.5rem 3rem;
+      box-shadow: var(--shadow); padding: 2.5rem 3rem 3rem;
     }
     @media (max-width: 640px) { .fatwa-detail-card { padding: 1.75rem 1.25rem 2.25rem; } }
     .fatwa-back-link {
@@ -27,10 +27,10 @@
       font-size: .85rem; font-weight: 600; margin-bottom: 1.25rem;
     }
     .fatwa-back-link:hover { color: var(--gold-dark); }
-    .fatwa-detail-title { font-size: clamp(1.5rem, 3vw, 1.9rem); color: var(--navy); margin-bottom: .3rem; line-height: 1.3; }
-    .fatwa-detail-date { font-size: .82rem; color: var(--text-muted); margin-bottom: 2rem; }
+    .fatwa-detail-title { font-size: clamp(1.5rem, 3vw, 1.9rem); color: var(--navy); margin-bottom: 2rem; line-height: 1.3; }
+    .fatwa-detail-date { font-size: .82rem; color: var(--text-muted); margin: 0; }
 
-    .fatwa-cat-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: .25rem .75rem; border-radius: 50px; margin-bottom: .85rem; }
+    .fatwa-cat-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: .25rem .75rem; border-radius: 50px; }
     .cat-salah{background:rgba(26,75,140,.1);color:#1A4B8C}
     .cat-zakaat{background:rgba(201,162,39,.15);color:#9E7D18}
     .cat-sawm{background:rgba(46,134,193,.12);color:#1A6090}
@@ -47,9 +47,9 @@
     .cat-general{background:rgba(12,31,61,.08);color:var(--navy)}
     .cat-prohibition{background:rgba(120,40,140,.1);color:#6B2179}
 
-    .fatwa-question-box { background: repeating-linear-gradient(135deg, var(--cream), var(--cream) 10px, var(--gold-pale) 10px, var(--gold-pale) 20px); border: 1px solid var(--border); border-left: 6px solid var(--gold); border-radius: 8px; padding: 2rem; margin-bottom: 2.5rem; position: relative; overflow: hidden; }
+    .fatwa-question-box { background: var(--white); border: 1px solid var(--border); border-left: 6px solid var(--gold); border-radius: 8px; padding: 2rem; margin-bottom: 2.5rem; position: relative; overflow: hidden; }
     .question-label { display: inline-flex; align-items: center; gap: .5rem; background: var(--navy); border: 1px solid var(--navy); color: var(--gold-light); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .85rem; border-radius: 50px; margin-bottom: 1rem; }
-    .fatwa-question-text { color: var(--navy); font-size: 1.05rem; line-height: 1.8; font-style: italic; margin: 0; }
+    .fatwa-question-text { color: var(--navy); font-size: 1.05rem; line-height: 1.8; margin: 0; }
     .answer-label { display: inline-flex; align-items: center; gap: .5rem; background: rgba(176,141,59,.12); border: 1px solid rgba(176,141,59,.3); color: var(--gold-dark); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .85rem; border-radius: 50px; margin-bottom: 1.25rem; }
     .fatwa-answer-body { font-size: .97rem; line-height: 1.9; color: #444; }
     .fatwa-answer-body p { margin-bottom: 1.1rem; }
@@ -66,6 +66,10 @@
     .attr-role { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #888; margin-bottom: .15rem; }
     .attr-name { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--navy); font-weight: 600; margin-bottom: .1rem; }
     .attr-title { font-size: .83rem; color: #555; }
+    .fatwa-meta-footer {
+      display: flex; align-items: center; flex-wrap: wrap; gap: .85rem;
+      margin-top: 2rem; padding-top: 1.75rem; border-top: 2px solid #eee;
+    }
 
     .fatwa-not-found { text-align: center; padding: 4rem 1rem; }
     .fatwa-not-found i { font-size: 2.5rem; color: var(--border); margin-bottom: 1rem; display: block; }
@@ -77,11 +81,11 @@
     /* ---- Serial number + prev/next navigation (bottom of every fatwa page) ---- */
     .fatwa-serial-line {
       text-align: center; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
-      text-transform: uppercase; color: var(--text-muted); margin: 3rem auto 1rem; max-width: 820px;
+      text-transform: uppercase; color: var(--text-muted); margin: 3rem auto 1rem; max-width: 1080px;
     }
     .fatwa-serial-line span { color: var(--navy); }
     .fatwa-pager {
-      max-width: 820px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+      max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
     }
     @media (max-width: 640px) { .fatwa-pager { grid-template-columns: 1fr; } }
     .fatwa-pager-link, .fatwa-pager-empty {
@@ -282,9 +286,7 @@
       <div class="refs-body">${refsHtml}</div>` : '';
 
     document.getElementById('fatwa-detail').innerHTML = `
-      <span class="fatwa-cat-badge ${cls}"><i class="fas fa-scale-balanced"></i> ${esc(f.category)}</span>
       <h1 class="fatwa-detail-title">${esc(f.title)}</h1>
-      <p class="fatwa-detail-date">${formatDate(f.date)}</p>
 
       <div class="fatwa-question-box">
         <span class="question-label"><i class="fas fa-question-circle"></i> The Question</span>
@@ -293,8 +295,6 @@
 
       <span class="answer-label"><i class="fas fa-check-circle"></i> The Answer</span>
       <div class="fatwa-answer-body">${f.answer || '<em>No answer recorded.</em>'}</div>
-
-      ${refsBlock}
 
       <div class="fatwa-closing">
         <p class="allah-knows-best">And Allah ﷻ knows best.</p>
@@ -313,9 +313,17 @@
           <div class="attr-entry">
             <div class="attr-role">Checked &amp; Approved by</div>
             <div class="attr-name">Mufti Manzoor Ahmad</div>
-            <div class="attr-title">Mufti, Darul Iftāʾ</div>
+            <div class="attr-title">Senior Mufti, Darul Iftāʾ</div>
           </div>
         </div>
+
+        ${refsBlock}
+
+        <div class="fatwa-meta-footer">
+          <span class="fatwa-detail-date">${formatDate(f.date)}</span>
+          <span class="fatwa-cat-badge ${cls}"><i class="fas fa-scale-balanced"></i> ${esc(f.category)}</span>
+        </div>
+
         <div class="fatwa-share">
           <a href="iftaa.html"><i class="fas fa-arrow-left"></i> Back to Fataawas</a>
         </div>
