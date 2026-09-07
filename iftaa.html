@@ -324,6 +324,14 @@
     @media (max-width: 1024px) { .fatwa-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width: 640px)  { .fatwa-grid { grid-template-columns: 1fr; } }
     @media (max-width: 768px) { .iftaa-search-section { top: 0; } }
+
+    /* Fataawas page typography: Times New Roman, 12pt, throughout (icons excluded) */
+    #fataawas-hero, #fataawas-hero *:not(i),
+    .iftaa-search-section, .iftaa-search-section *:not(i),
+    .iftaa-main, .iftaa-main *:not(i) {
+      font-family: 'Times New Roman', Times, serif !important;
+      font-size: 12pt !important;
+    }
   </style>
 </head>
 <body>
@@ -368,7 +376,7 @@
   </nav>
 
   <!-- PAGE HERO -->
-  <section class="page-hero" style="background: linear-gradient(135deg, rgba(12,31,61,.85), rgba(26,75,140,.75)), url('Radd.jpg') center 70%/cover no-repeat;">
+  <section class="page-hero" id="fataawas-hero" style="background: linear-gradient(135deg, rgba(12,31,61,.85), rgba(26,75,140,.75)), url('Radd.jpg') center 70%/cover no-repeat;">
     <div class="container">
       <div class="breadcrumb">
         <a href="index.html">Home</a>
