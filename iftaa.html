@@ -1606,6 +1606,54 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
+  // PDFs don't store "underline" as a text attribute — it's a separate thin
+  // line drawn under the text. This walks the page's raw drawing operators
+  // (tracking the save/restore/transform matrix stack) and picks out every
+  // stroked or filled path that's a thin, wide horizontal bar: a drawn
+  // underline. Returns [{ x0, x1, y }], in the same coordinate space
+  // pdf.js reports text item.transform in, so it can be matched against
+  // each text run's position directly.
+  function findUnderlineSegments(opList) {
+    const { Util, OPS } = pdfjsLib;
+    const underlines = [];
+    const stack = [];
+    let ctm = [1, 0, 0, 1, 0, 0];
+    let pendingPath = null;
+
+    for (let i = 0; i < opList.fnArray.length; i++) {
+      const fn = opList.fnArray[i];
+      const args = opList.argsArray[i];
+      if (fn === OPS.save) { stack.push(ctm); }
+      else if (fn === OPS.restore) { ctm = stack.pop() || ctm; }
+      else if (fn === OPS.transform) { ctm = Util.transform(ctm, args); }
+      else if (fn === OPS.constructPath) { pendingPath = args; }
+      else if (fn === OPS.stroke || fn === OPS.fill || fn === OPS.eoFill) {
+        if (!pendingPath) continue;
+        const [subOps, subArgs] = pendingPath;
+        let ai = 0;
+        const pts = [];
+        for (const sub of subOps) {
+          if (sub === OPS.moveTo || sub === OPS.lineTo) {
+            pts.push(Util.applyTransform([subArgs[ai], subArgs[ai + 1]], ctm)); ai += 2;
+          } else if (sub === OPS.rectangle) {
+            const [x, y, w, h] = [subArgs[ai], subArgs[ai + 1], subArgs[ai + 2], subArgs[ai + 3]];
+            pts.push(Util.applyTransform([x, y], ctm), Util.applyTransform([x + w, y + h], ctm));
+            ai += 4;
+          } else if (sub === OPS.curveTo) { ai += 6; }
+        }
+        if (pts.length >= 2) {
+          const ys = pts.map(p => p[1]), xs = pts.map(p => p[0]);
+          const yMin = Math.min(...ys), yMax = Math.max(...ys);
+          const xMin = Math.min(...xs), xMax = Math.max(...xs);
+          // Thin + wide = a drawn underline; anything taller is a real box/border.
+          if ((yMax - yMin) < 1.5 && (xMax - xMin) > 3) underlines.push({ x0: xMin, x1: xMax, y: (yMin + yMax) / 2 });
+        }
+        pendingPath = null;
+      }
+    }
+    return underlines;
+  }
+
   (function() {
     const zone = document.getElementById('pdf-drop-zone');
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
@@ -1624,20 +1672,43 @@
     try {
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      let fullText = '';
+      // Each entry is one visual line: { text, size, runs } — size is the line's
+      // largest font size (used to spot the size-24 title), and runs keeps each
+      // text run's bold/underline flags so that formatting survives into the
+      // posted fatwa exactly as it appeared in the PDF.
+      const lineObjs = [];
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        let lastY = null, lineText = '';
+        const [content, opList] = await Promise.all([page.getTextContent(), page.getOperatorList()]);
+        const underlines = findUnderlineSegments(opList);
+        let lastY = null, runs = [], lineSize = 0, lineIsLetterhead = false;
+        const flush = () => {
+          if (!lineIsLetterhead) lineObjs.push({ text: runs.map(r => r.str).join(''), size: lineSize, runs });
+          runs = []; lineSize = 0; lineIsLetterhead = false;
+        };
         for (const item of content.items) {
-          if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) { fullText += lineText + '\n'; lineText = ''; }
-          lineText += item.str;
-          lastY = item.transform[5];
+          const size = Math.hypot(item.transform[0], item.transform[1]) || 0;
+          if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) flush();
+          // content.styles[].fontFamily is only a generic CSS fallback ("serif"/
+          // "sans-serif") — the real embedded PostScript name (e.g. "Garamond-Bold")
+          // lives on the resolved font object in commonObjs.
+          let realFontName = '';
+          try { const f = page.commonObjs.get(item.fontName); realFontName = (f && f.name) || ''; } catch (e) { /* not resolved */ }
+          // The department's letterhead (name/address/contact line) repeats on
+          // every page in Garamond and isn't part of the fatwa itself — drop it.
+          if (/garamond/i.test(realFontName)) lineIsLetterhead = true;
+          const bold = /bold/i.test(realFontName);
+          const y = item.transform[5];
+          const x0 = item.transform[4], x1 = x0 + (item.width || 0);
+          const underline = underlines.some(u => Math.abs(u.y - y) < 4 && u.x0 < x1 && u.x1 > x0);
+          runs.push({ str: item.str, bold, underline });
+          lineSize = Math.max(lineSize, size);
+          lastY = y;
         }
-        if (lineText) fullText += lineText + '\n';
-        fullText += '\n';
+        if (runs.length) flush();
+        lineObjs.push({ text: '', size: 0, runs: [] });
       }
-      const parsed = parseFatwaText(fullText);
+      const parsed = parseFatwaText(lineObjs);
       fillFormFromParsed(parsed);
       openFatwaPreview();
     } catch(err) {
@@ -1648,60 +1719,149 @@
     }
   }
 
-  function parseFatwaText(text) {
-    const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-    const Q_RE   = /^\s*(question|mas['’]alah|mas'ala|query|سوال|مسئلہ)\s*[:\-]?\s*$/i;
-    const A_RE   = /^\s*(answer|jawab|fatwa|ruling|جواب|فتوی)\s*[:\-]?\s*$/i;
-    const REF_RE = /^\s*(references?|sources?|bibliography|مصادر|مراجع)\s*[:\-]?\s*$/i;
-    const WB_RE  = /^\s*(written\s*by|prepared\s*by|student|compiled\s*by)\s*[:\-]?\s*/i;
-    const AB_RE  = /^\s*(approved\s*by|checked\s*by|verified\s*by)\s*[:\-]?\s*/i;
-    const Q_INLINE   = /^\s*(question|mas['’]alah|mas'ala|query)\s*[:]\s*/i;
-    const A_INLINE   = /^\s*(answer|jawab|fatwa|ruling)\s*[:]\s*/i;
-    const REF_INLINE = /^\s*(references?)\s*[:]\s*/i;
-    const WB_INLINE  = /^\s*(written\s*by|prepared\s*by|student)\s*[:]\s*/i;
+  // Parses the department's standard fatwa PDF layout:
+  //   <size-24 title>
+  //   Question: ...
+  //   Answer:
+  //   الجواب بملهم الصدق و الصواب        <- fixed heading fatwa.html already renders; dropped here
+  //   ...answer body...
+  //   And Allah knows best.
+  //   Written by:
+  //   <name>
+  //   Student, Darul Ifta, Darul Uloom New York   <- static, dropped (title is hardcoded on the page)
+  //   Checked and Approved by:
+  //   <the two fixed muftis + their titles>       <- static, dropped (also hardcoded on the page)
+  //   <Gregorian date>
+  //   <Hijri date>                                <- no field for this yet, dropped
+  //   ...references (Arabic/Urdu citations) to end of document...
+  function parseFatwaText(lineObjs) {
+    const Q_RE   = /^\s*(question|mas['’]?alah|sual|query|سوال|مسئلہ)\s*[:\-]?\s*/i;
+    const A_RE   = /^\s*(answer|jawab|fatwa|ruling|جواب|فتوی)\s*[:\-]?\s*/i;
+    const REF_RE = /^\s*(references?|sources?|bibliography|مصادر|مراجع)\s*[:\-]?\s*/i;
+    const WB_RE  = /^\s*(written\s*by|prepared\s*by|compiled\s*by)\s*[:\-]?\s*/i;
+    const CB_RE  = /^\s*checked\s*(and|&)?\s*approved\s*by\s*[:\-]?\s*/i;
+    const ALLAH_RE = /and\s+allah[^a-z]*knows\s+best/i;
+    // Some PDF exports encode Arabic using presentation-form/ligature glyphs
+    // extracted in on-page (visual) rather than logical reading order, which
+    // breaks any attempt to match this heading by its exact phrase — so instead
+    // this only checks "is the line Arabic-script text with no Latin letters",
+    // and is applied positionally (the line right after "Answer:") below.
+    const ARABIC_ONLY_RE = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿ـ\s.,:;'"()\-]+$/;
+    const STUDENT_TITLE_RE = /^\s*student,?\s*darul\s*ift/i;
+    const GREGORIAN_DATE_RE = /^[A-Za-z]+\.?\s+\d{1,2},?\s+\d{4}$/;
+    const HIJRI_MONTH_RE = /(muharram|safar|rabi|jumada|rajab|sha.?ban|ramadan|shawwal|dhu.?(l|al))/i;
 
-    let title = '', question = '', answer = '', refs = '', writtenBy = '';
-    let section = 'title';
-    const titleLines = [], qLines = [], aLines = [], rLines = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const raw = lines[i];
-      const trimmed = raw.trim();
-      if (Q_RE.test(trimmed))   { section = 'question'; continue; }
-      if (A_RE.test(trimmed))   { section = 'answer';   continue; }
-      if (REF_RE.test(trimmed)) { section = 'refs';     continue; }
-      if (Q_INLINE.test(trimmed))   { section = 'question'; qLines.push(trimmed.replace(Q_INLINE, '')); continue; }
-      if (A_INLINE.test(trimmed))   { section = 'answer';   aLines.push(trimmed.replace(A_INLINE, '')); continue; }
-      if (REF_INLINE.test(trimmed)) { section = 'refs';     rLines.push(trimmed.replace(REF_INLINE, '')); continue; }
-      if (WB_RE.test(trimmed) || WB_INLINE.test(trimmed)) {
-        writtenBy = trimmed.replace(WB_RE, '').replace(WB_INLINE, '').trim();
-        section = 'skip'; continue;
+    // Bold and/or underlined runs (e.g. a citation heading like "رد المحتار...")
+    // are wrapped in <strong>/<u> so they keep their exact formatting once
+    // posted — matches how fatwa.html already renders those tags in the body.
+    const escHtml = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    function runsToHtml(runs) {
+      let html = '', i = 0;
+      while (i < runs.length) {
+        const { bold, underline } = runs[i];
+        let chunk = '';
+        while (i < runs.length && runs[i].bold === bold && runs[i].underline === underline) { chunk += runs[i].str; i++; }
+        if (!chunk) continue;
+        let piece = escHtml(chunk);
+        if (underline) piece = `<u>${piece}</u>`;
+        if (bold) piece = `<strong>${piece}</strong>`;
+        html += piece;
       }
-      if (AB_RE.test(trimmed)) { section = 'skip'; continue; }
-      if (section === 'title')    titleLines.push(raw);
-      else if (section === 'question') qLines.push(raw);
-      else if (section === 'answer')   aLines.push(raw);
-      else if (section === 'refs')     rLines.push(raw);
+      return html;
+    }
+    function dropChars(runs, count) {
+      const out = []; let remaining = count;
+      for (const r of runs) {
+        if (remaining <= 0) { out.push(r); continue; }
+        if (r.str.length <= remaining) { remaining -= r.str.length; continue; }
+        out.push({ str: r.str.slice(remaining), bold: r.bold, underline: r.underline }); remaining = 0;
+      }
+      return out;
+    }
+    // HTML for everything on this line after a matched label (e.g. strips
+    // "Question: " but keeps the rest — bold and all — as markup.
+    function restHtml(lineObj, match) {
+      const leadingWs = lineObj.text.length - lineObj.text.replace(/^\s+/, '').length;
+      return runsToHtml(dropChars(lineObj.runs, leadingWs + (match ? match[0].length : 0)));
     }
 
-    const nonEmpty = titleLines.filter(l => l.trim());
-    title = nonEmpty.slice(0, 2).join(' ').trim();
-
-    if (!qLines.length && !aLines.length) {
-      title = nonEmpty[0] || '';
-      answer = lines.slice(1).join('\n').trim();
-    } else {
-      question = qLines.join('\n').trim();
-      answer   = aLines.join('\n').trim();
+    // Title = the largest-font non-empty line before the Question label —
+    // matches the "always size 24 / Heading 1" rule directly instead of guessing.
+    let qIdx = lineObjs.findIndex(l => Q_RE.test(l.text.trim()));
+    let title = '';
+    const preLines = lineObjs.slice(0, qIdx === -1 ? lineObjs.length : qIdx).filter(l => l.text.trim());
+    if (preLines.length) {
+      const maxSize = Math.max(...preLines.map(l => l.size));
+      title = preLines.filter(l => l.size >= maxSize - 0.5).map(l => l.text.trim()).join(' ').trim();
     }
-    refs = rLines.filter(l => l.trim()).join('\n').trim();
-    return { title, question, answer, refs, writtenBy };
+    if (qIdx === -1) qIdx = 0;
+
+    let section = 'question';
+    let writtenByPending = false;
+    let answerHeadingPending = false;
+    let writtenBy = '', date = '';
+    const qParts = [], aParts = [], rParts = [];
+
+    for (let i = qIdx; i < lineObjs.length; i++) {
+      const lineObj = lineObjs[i];
+      const trimmed = lineObj.text.trim();
+      if (!trimmed) continue;
+
+      // Only ever consulted on the one line right after "Answer:" — drops the
+      // department's fixed Arabic answer heading (fatwa.html renders that
+      // itself), without needing to match its exact, unreliably-extracted text.
+      if (answerHeadingPending) {
+        answerHeadingPending = false;
+        if (ARABIC_ONLY_RE.test(trimmed)) continue;
+      }
+
+      let m;
+      if ((m = trimmed.match(Q_RE))) { section = 'question'; const rest = restHtml(lineObj, m); if (rest.trim()) qParts.push(rest); continue; }
+      if ((m = trimmed.match(A_RE))) { section = 'answer'; answerHeadingPending = true; const rest = restHtml(lineObj, m); if (rest.trim()) aParts.push(rest); continue; }
+      if ((m = trimmed.match(REF_RE))) { section = 'refs';   const rest = restHtml(lineObj, m); if (rest.trim()) rParts.push(rest); continue; }
+      if (ALLAH_RE.test(trimmed)) { section = 'closing'; continue; }
+      if ((m = trimmed.match(WB_RE))) {
+        const rest = trimmed.slice(m[0].length).trim();
+        if (rest) { writtenBy = rest; section = 'closing'; } else { writtenByPending = true; section = 'closing'; }
+        continue;
+      }
+      if (writtenByPending) { writtenBy = trimmed; writtenByPending = false; continue; }
+      if (STUDENT_TITLE_RE.test(trimmed)) continue;
+      if (CB_RE.test(trimmed)) { section = 'approvers'; continue; }
+      if (GREGORIAN_DATE_RE.test(trimmed)) {
+        if (!date) { const d = new Date(trimmed.replace(/,/g, '')); if (!isNaN(d)) date = d.toISOString().split('T')[0]; }
+        section = 'refs'; continue;
+      }
+      if (HIJRI_MONTH_RE.test(trimmed) && /\d/.test(trimmed)) { section = 'refs'; continue; }
+
+      const html = runsToHtml(lineObj.runs);
+      if (section === 'question') qParts.push(html);
+      else if (section === 'answer') aParts.push(html);
+      else if (section === 'refs') rParts.push(html);
+      // 'approvers' and 'closing' lines (the fixed muftis, "Student, ..." leftovers) are dropped
+    }
+
+    // Fallback for PDFs that don't use these labels at all: first line is the
+    // title, everything else goes into the answer for manual sorting.
+    if (!qParts.length && !aParts.length) {
+      const all = lineObjs.filter(l => l.text.trim());
+      return { title: title || (all[0] ? all[0].text.trim() : ''), question: '', answer: all.slice(1).map(l => runsToHtml(l.runs)).join('<br>').trim(), refs: '', writtenBy: '', date: '' };
+    }
+
+    return {
+      title,
+      question: qParts.join('<br>').trim(),
+      answer: aParts.join('<br>').trim(),
+      refs: rParts.join('<br>').trim(),
+      writtenBy,
+      date
+    };
   }
 
   function fillFormFromParsed(p) {
     document.getElementById('u-title').value   = p.title || '';
     if (p.writtenBy) document.getElementById('u-student').value = p.writtenBy;
-    document.getElementById('u-date').value    = new Date().toISOString().split('T')[0];
+    document.getElementById('u-date').value    = p.date || new Date().toISOString().split('T')[0];
     setRich('u-question', p.question || '');
     setRich('u-answer',   p.answer   || '');
     setRich('u-refs',     p.refs ? p.refs.split('\n').filter(Boolean).join('<br>') : '');
@@ -1773,6 +1933,7 @@
       </div>
 
       <span class="answer-label"><i class="fas fa-check-circle"></i> The Answer</span>
+      <p style="text-align:center;direction:rtl;color:var(--gold-dark);font-weight:700;margin:0 0 1.5rem;">الجواب بملهم الصدق و الصواب</p>
       <div class="fatwa-answer-body">${answer || '<em style="color:#aaa">No answer entered</em>'}</div>
 
       ${refsBlock}
@@ -1793,7 +1954,7 @@
           <div class="attr-entry">
             <div class="attr-role">Checked &amp; Approved by</div>
             <div class="attr-name">Mufti Manzoor Ahmad</div>
-            <div class="attr-title">Mufti, Darul Iftāʾ</div>
+            <div class="attr-title">Senior Mufti, Darul Iftāʾ</div>
           </div>
         </div>
       </div>`;
