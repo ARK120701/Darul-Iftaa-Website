@@ -128,6 +128,9 @@
       outline: none;
       cursor: pointer;
     }
+    .pdf-attach-row { margin-bottom: 1.25rem; font-size: 0.85rem; }
+    .pdf-attach-row label { display: block; font-weight: 600; color: #444; margin-bottom: 0.35rem; }
+    .pdf-attach-status { margin-top: 0.35rem; color: #666; }
     .placeholder-notice {
       display: flex; align-items: center; gap: 0.75rem;
       background: var(--gold-pale); border: 1px solid var(--gold-light); border-radius: var(--radius);
@@ -875,6 +878,12 @@
           <span class="pdf-spinner"></span> Parsing PDF…
         </div>
 
+        <div class="pdf-attach-row">
+          <label for="attach-pdf-input"><i class="fas fa-paperclip"></i> Attach or replace the PDF only (doesn't change the text)</label>
+          <input type="file" id="attach-pdf-input" accept=".pdf,application/pdf" onchange="attachPdfOnly(this.files[0])" />
+          <div class="pdf-attach-status" id="attach-pdf-status"></div>
+        </div>
+
         <form id="adm-upload-form" novalidate>
           <input type="hidden" id="u-edit-slug" value="" />
           <div class="adm-form-grid">
@@ -1522,6 +1531,8 @@
     document.getElementById('u-edit-slug').value = '';
     clearRich('u-question'); clearRich('u-answer'); clearRich('u-refs');
     pendingFatwaPdf = null;
+    const ap = document.getElementById('attach-pdf-input'); if (ap) ap.value = '';
+    showPdfStatus();
     admKeywords = []; admRenderKw();
     document.getElementById('upload-success').classList.remove('show');
     document.getElementById('form-mode-title').innerHTML = '<i class="fas fa-upload"></i> Upload New Fatwa';
@@ -1545,6 +1556,8 @@
     setRich('u-answer', f.answer || '');
     setRich('u-refs', Array.isArray(f.references) ? f.references.join('<br>') : (f.references || ''));
     document.getElementById('u-edit-slug').value = f.slug;
+    pendingFatwaPdf = null;
+    showPdfStatus(f.pdf_url);
     admKeywords = [...(f.keywords || [])]; admRenderKw();
     document.getElementById('form-mode-title').innerHTML = '<i class="fas fa-pen"></i> Edit Fatwa';
     document.getElementById('form-mode-sub').textContent = 'Editing existing fatwa. Click Save Changes when done.';
@@ -1711,10 +1724,25 @@
     });
   })();
 
+  function showPdfStatus(existingUrl) {
+    const el = document.getElementById('attach-pdf-status');
+    if (!el) return;
+    if (pendingFatwaPdf) el.innerHTML = '<i class="fas fa-file-pdf" style="color:#e53e3e"></i> Will upload on save: ' + esc(pendingFatwaPdf.name);
+    else if (existingUrl) el.innerHTML = '<i class="fas fa-check-circle" style="color:#27ae60"></i> A PDF is already attached to this fatwa.';
+    else el.textContent = '';
+  }
+  function attachPdfOnly(file) {
+    if (!file) return;
+    if (file.type !== 'application/pdf') { alert('Please choose a PDF file.'); return; }
+    pendingFatwaPdf = file;
+    showPdfStatus();
+  }
+
   async function handlePdfUpload(file) {
     if (!file) return;
     const status = document.getElementById('pdf-parsing-status');
     pendingFatwaPdf = file;
+    showPdfStatus();
     status.style.display = 'flex';
     try {
       const arrayBuffer = await file.arrayBuffer();
