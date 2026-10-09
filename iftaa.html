@@ -15,6 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <style>
     /* ---- Iftaa Search Section ---- */
     .iftaa-search-section {
@@ -360,6 +361,14 @@
         <li><a href="services.html">Services</a></li>
         <li><a href="iftaa-course.html">Iftaa Course</a></li>
         <li><a href="iftaa.html" class="active">Fataawas</a></li>
+        <li class="nav-dropdown">
+          <a href="articles.html">Resources <i class="fas fa-chevron-down nav-caret"></i></a>
+          <div class="nav-dropdown-menu">
+            <a href="articles.html"><i class="fas fa-file-lines"></i> Research Papers</a>
+            <a href="magazine.html"><i class="fas fa-book-open"></i> Monthly Magazine</a>
+            <a href="events.html"><i class="fas fa-calendar-days"></i> Events</a>
+          </div>
+        </li>
         <li><a href="contact.html?subject=fatwa" class="nav-donate-btn">Ask A Question</a></li>
       </ul>
       <button class="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
@@ -371,6 +380,9 @@
       <a href="services.html">Services</a>
       <a href="iftaa-course.html">Iftaa Course</a>
       <a href="iftaa.html" class="active">Fataawas</a>
+      <a href="articles.html">Research Papers</a>
+      <a href="magazine.html">Monthly Magazine</a>
+      <a href="events.html">Events</a>
       <a href="contact.html?subject=fatwa">Ask A Question</a>
     </nav>
   </nav>
@@ -490,6 +502,9 @@
             <li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li>
             <li><a href="iftaa-course.html"><i class="fas fa-chevron-right"></i> Iftaa Course</a></li>
             <li><a href="iftaa.html"><i class="fas fa-chevron-right"></i> Fataawas</a></li>
+            <li><a href="articles.html"><i class="fas fa-chevron-right"></i> Research Papers</a></li>
+            <li><a href="magazine.html"><i class="fas fa-chevron-right"></i> Monthly Magazine</a></li>
+            <li><a href="events.html"><i class="fas fa-chevron-right"></i> Events</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -1432,14 +1447,29 @@
     btn.classList.add('loading');
     document.getElementById('upload-btn-text').style.display = 'none';
 
-    setTimeout(() => {
+    setTimeout(async () => {
       btn.classList.remove('loading');
       document.getElementById('upload-btn-text').style.display = '';
       const isEdit = !!editSlug;
 
+      // Keep the original PDF: upload it to the fatawaas/ folder in Firebase Storage.
+      let pdfInfo = null;
+      if (pendingFatwaPdf && storage && auth && auth.currentUser) {
+        try {
+          const path = 'fatawaas/' + Date.now() + '-' + pendingFatwaPdf.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-');
+          const snap = await storage.ref(path).put(pendingFatwaPdf, { contentType: 'application/pdf' });
+          pdfInfo = { pdf_url: await snap.ref.getDownloadURL(), pdf_path: path };
+        } catch (e) {
+          alert('The fatwa will be saved, but its PDF could not be uploaded: ' + e.message);
+        }
+      }
+
       if (isEdit) {
         const updated = { slug: editSlug, title, arabic_title: arabic, question, answer,
           written_by: student, date, category, keywords: [...admKeywords], references, madhab };
+        const prev = allFatwas.find(f => f.slug === editSlug) || {};
+        const pdfFields = pdfInfo || (prev.pdf_url ? { pdf_url: prev.pdf_url, pdf_path: prev.pdf_path || '' } : null);
+        if (pdfFields) Object.assign(updated, pdfFields);
         if (isLocalFatwa(editSlug)) {
           const arr = getLocal();
           const idx = arr.findIndex(f => f.slug === editSlug);
@@ -1461,6 +1491,7 @@
         const fatwa = { id: newId, slug, title, arabic_title: arabic, question, answer,
           mufti: 'Darul Iftaa New York', written_by: student,
           date, category, keywords: [...admKeywords], references, madhab };
+        if (pdfInfo) Object.assign(fatwa, pdfInfo);
         saveLocal([fatwa, ...existing]);
         fbSaveFatwa(fatwa);
         allFatwas = [fatwa, ...allFatwas];
@@ -1479,6 +1510,7 @@
     document.getElementById('u-date').value = new Date().toISOString().split('T')[0];
     document.getElementById('u-edit-slug').value = '';
     clearRich('u-question'); clearRich('u-answer'); clearRich('u-refs');
+    pendingFatwaPdf = null;
     admKeywords = []; admRenderKw();
     document.getElementById('upload-success').classList.remove('show');
     document.getElementById('form-mode-title').innerHTML = '<i class="fas fa-upload"></i> Upload New Fatwa';
@@ -1567,6 +1599,8 @@
 
   let db = null;
   let auth = null;
+  var storage = null;
+  var pendingFatwaPdf = null; // PDF imported in the admin form; uploaded to fatawaas/ on save
   let pendingAdminHash = window.location.hash === '#admin';
   if (pendingAdminHash) history.replaceState(null, '', window.location.pathname + window.location.search);
 
@@ -1577,6 +1611,7 @@
       firebase.initializeApp(FIREBASE_CONFIG);
       db = firebase.firestore();
       auth = firebase.auth();
+      storage = firebase.storage ? firebase.storage() : null;
       auth.onAuthStateChanged(user => {
         if (user) { openPanel(); }
         else if (pendingAdminHash) { pendingAdminHash = false; openAdminLogin(); }
@@ -1668,6 +1703,7 @@
   async function handlePdfUpload(file) {
     if (!file) return;
     const status = document.getElementById('pdf-parsing-status');
+    pendingFatwaPdf = file;
     status.style.display = 'flex';
     try {
       const arrayBuffer = await file.arrayBuffer();

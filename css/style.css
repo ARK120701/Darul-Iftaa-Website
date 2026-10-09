@@ -1613,3 +1613,66 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
 .nav-dropdown-menu a:hover { background: rgba(201,162,39,0.12); color: var(--gold-light); }
 .nav-dropdown-menu i { color: var(--gold); font-size: 0.8rem; width: 14px; }
 .mobile-sub-link { font-size: 0.85rem; opacity: 0.75; }
+
+/* ============================================================
+   LIBRARY PAGES (Research Papers, Magazine, Events, Reader)
+   ============================================================ */
+.lib-toolbar { display: flex; gap: 1rem; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 2rem; }
+.lib-search { flex: 1; min-width: 220px; max-width: 420px; padding: 0.7rem 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); font-size: 0.95rem; color: var(--text-body); }
+.lib-search:focus { outline: 2px solid var(--gold-light); border-color: var(--gold); }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+.lib-list { display: flex; flex-direction: column; gap: 1.25rem; }
+.lib-heading { font-size: 1.6rem; margin: 0 0 1.25rem; }
+.lib-heading.lib-past { margin-top: 3rem; color: var(--text-muted); }
+.lib-card, .lib-event { display: flex; gap: 1.1rem; background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.4rem; box-shadow: var(--shadow); }
+.lib-card-icon { font-size: 2rem; color: var(--gold); flex-shrink: 0; line-height: 1.2; }
+.lib-card-body { flex: 1; min-width: 0; }
+.lib-card h3, .lib-event h3 { font-size: 1.15rem; margin-bottom: 0.35rem; }
+.lib-card p, .lib-event p { font-size: 0.92rem; color: var(--text-body); margin: 0.4rem 0 0; }
+.lib-meta { font-size: 0.82rem; color: var(--text-muted); display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; }
+.lib-meta i { color: var(--gold); margin-right: 0.3rem; }
+.lib-actions { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin-top: 1rem; }
+.lib-btn { padding: 0.45rem 1rem; font-size: 0.85rem; }
+.lib-date { flex-shrink: 0; width: 76px; text-align: center; background: var(--navy); color: var(--white); border-radius: var(--radius); padding: 0.6rem 0.3rem; display: flex; flex-direction: column; justify-content: center; line-height: 1.15; }
+.lib-date strong { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--gold-light); }
+.lib-date span { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; }
+.lib-date em { font-style: normal; font-size: 0.72rem; opacity: 0.7; }
+.lib-empty { text-align: center; padding: 4rem 1rem; color: var(--text-muted); }
+.lib-empty i { font-size: 2.5rem; color: var(--border); display: block; margin-bottom: 1rem; }
+
+/* admin-only controls stay hidden unless signed in */
+.lib-admin-only { display: none !important; }
+body.lib-is-admin .lib-admin-only { display: inline-flex !important; gap: 0.75rem; align-items: center; }
+body.lib-is-admin .lib-toolbar .btn.lib-admin-only { display: inline-flex !important; }
+.lib-link { font-size: 0.82rem; font-weight: 600; color: var(--blue); }
+.lib-link:hover { color: var(--gold-dark); }
+.lib-link.lib-danger { color: #b3261e; }
+
+#lib-admin-fab { position: fixed; bottom: 1.25rem; right: 1.25rem; z-index: 900; width: 42px; height: 42px; border-radius: 50%; background: var(--navy); color: rgba(255,255,255,0.7); box-shadow: var(--shadow); font-size: 0.95rem; }
+#lib-admin-fab:hover, #lib-admin-fab.signed-in { color: var(--gold); }
+
+.lib-overlay { position: fixed; inset: 0; z-index: 2000; background: rgba(12,31,61,0.65); display: flex; align-items: center; justify-content: center; padding: 1rem; overflow-y: auto; }
+.lib-modal { position: relative; background: var(--white); border-radius: var(--radius-lg); padding: 2rem; width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
+.lib-modal h3 { margin-bottom: 1.25rem; }
+.lib-modal label { display: block; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #555; margin-bottom: 1rem; }
+.lib-modal input, .lib-modal textarea { display: block; width: 100%; margin-top: 0.35rem; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; text-transform: none; letter-spacing: 0; font-weight: 400; background: var(--parchment); }
+.lib-modal .btn { width: 100%; justify-content: center; }
+.lib-x { position: absolute; top: 0.6rem; right: 0.9rem; font-size: 1.8rem; line-height: 1; color: var(--text-muted); }
+.lib-err { color: #b3261e; font-size: 0.85rem; margin-bottom: 0.75rem; }
+.lib-progress { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1rem; }
+.lib-progress span { display: block; height: 100%; width: 0; background: var(--gold); transition: width 0.15s; }
+
+.reader-wrap { max-width: 920px; margin: 0 auto; }
+.reader-wrap h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); margin: 0.75rem 0 0.4rem; }
+.reader-body { margin-top: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.reader-page { max-width: 100%; height: auto !important; background: var(--white); box-shadow: var(--shadow); border: 1px solid var(--border); }
+.reader-frame { width: 100%; height: 85vh; border: 1px solid var(--border); border-radius: var(--radius); background: var(--white); }
+
+.coming-soon-banner { background: var(--gold-pale); border: 1px solid var(--gold-light); border-radius: var(--radius-lg); padding: 3rem 2rem; text-align: center; max-width: 640px; margin: 0 auto; }
+.coming-soon-banner i { font-size: 2.5rem; color: var(--gold); margin-bottom: 1rem; }
+
+@media (max-width: 480px) {
+  .lib-grid { grid-template-columns: 1fr; }
+  .lib-card, .lib-event { flex-direction: column; }
+  .lib-date { width: 100%; flex-direction: row; gap: 0.6rem; justify-content: center; align-items: baseline; }
+}

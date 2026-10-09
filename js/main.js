@@ -111,40 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   });
 
-  /* ---- Donate form submission ---- */
-  const donateForm = document.getElementById('donate-form');
-  donateForm?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const category = document.querySelector('.cat-option input:checked');
-    const amount = document.querySelector('.amt-option input:checked');
-    const customAmt = document.getElementById('custom-amount')?.value;
-
-    if (!category) {
-      alert('Please select a donation category.');
-      return;
-    }
-    const finalAmount = amount?.value === 'custom' ? customAmt : amount?.value;
-    if (!finalAmount || isNaN(finalAmount) || Number(finalAmount) <= 0) {
-      alert('Please enter or select a valid donation amount.');
-      return;
-    }
-
-    const btn = donateForm.querySelector('button[type="submit"]');
-    const original = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Processing...';
-    btn.disabled = true;
-    setTimeout(() => {
-      btn.innerHTML = '<i class="fas fa-heart"></i> JazakAllah Khayran!';
-      btn.style.background = 'linear-gradient(135deg, #27ae60, #1e8449)';
-      setTimeout(() => {
-        btn.innerHTML = original;
-        btn.style.background = '';
-        btn.disabled = false;
-        donateForm.reset();
-      }, 4000);
-    }, 1500);
-  });
-
   /* ---- Smooth scroll for anchor links ---- */
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', (e) => {
