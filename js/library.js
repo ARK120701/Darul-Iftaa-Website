@@ -94,6 +94,7 @@
       auth = firebase.auth();
       storage = firebase.storage ? firebase.storage() : null;
       auth.onAuthStateChanged(user => {
+        if (user && !isAllowedAdmin(user)) { auth.signOut(); return; }
         currentUser = user;
         authListeners.forEach(fn => fn(user));
       });
@@ -200,7 +201,8 @@
       const err = ov.querySelector('.lib-err');
       err.hidden = true;
       try {
-        await auth.signInWithEmailAndPassword(form.email.value.trim(), form.pass.value);
+        const cred = await auth.signInWithEmailAndPassword(form.email.value.trim(), form.pass.value);
+        if (!isAllowedAdmin(cred.user)) { await auth.signOut(); throw new Error('This account is not authorized for admin access.'); }
         ov.remove();
       } catch (ex) {
         err.textContent = 'Sign-in failed: ' + ex.message;

@@ -36,3 +36,13 @@ const FIREBASE_CONFIG = {
   uploads back on.
 */
 const STORAGE_ENABLED = false;
+
+/*
+  Only these accounts may use the admin lock on any page. This mirrors the allowlist
+  in firestore.rules / storage.rules (the rules are the real enforcement; this makes
+  the lock itself refuse everyone else).
+*/
+const ADMIN_EMAILS = ['a.khan120701@gmail.com', 'fatwa@duny.us'];
+function isAllowedAdmin(user) {
+  return !!(user && user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
+}

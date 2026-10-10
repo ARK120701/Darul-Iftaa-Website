@@ -1324,7 +1324,16 @@
     err.classList.remove('show');
     btn.classList.add('loading');
     auth.signInWithEmailAndPassword(email, pass)
-      .then(() => { btn.classList.remove('loading'); closeAdminLogin(); openPanel(); })
+      .then(cred => {
+        btn.classList.remove('loading');
+        if (!isAllowedAdmin(cred.user)) {
+          auth.signOut();
+          err.textContent = 'This account is not authorized for admin access.';
+          err.classList.add('show');
+          return;
+        }
+        closeAdminLogin(); openPanel();
+      })
       .catch(() => {
         btn.classList.remove('loading');
         err.textContent = 'Incorrect credentials.';
@@ -1636,6 +1645,7 @@
       auth = firebase.auth();
       storage = firebase.storage ? firebase.storage() : null;
       auth.onAuthStateChanged(user => {
+        if (user && !isAllowedAdmin(user)) { auth.signOut(); return; }
         if (user) { openPanel(); }
         else if (pendingAdminHash) { pendingAdminHash = false; openAdminLogin(); }
       });
