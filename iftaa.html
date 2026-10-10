@@ -1878,6 +1878,20 @@
         }
         lineObjs.push({ text: '', size: 0, runs: [] });
       }
+      // Normal line pitch = the most common gap between consecutive lines, measured
+      // separately for Arabic/Urdu and Latin lines (ties go to the smaller gap).
+      for (const isArabic of [false, true]) {
+        const counts = new Map();
+        lineObjs.forEach(l => {
+          if (l.gap > 0 && !!l.arabic === isArabic && l.gap <= 3 * Math.max(l.size || 12, 1)) {
+            const k = Math.round(l.gap);
+            counts.set(k, (counts.get(k) || 0) + 1);
+          }
+        });
+        let pitch = null, best = 0;
+        [...counts.entries()].sort((a, b) => a[0] - b[0]).forEach(([k, n]) => { if (n > best) { best = n; pitch = k; } });
+        if (pitch) lineObjs.forEach(l => { if (!!l.arabic === isArabic) l.limit = 1.35 * pitch + 1; });
+      }
       const parsed = parseFatwaText(lineObjs);
       fillFormFromParsed(parsed);
       openFatwaPreview();
@@ -1973,7 +1987,10 @@
     // was question/answer text.
     let lastBody = null;
     function pushBody(parts, html, lineObj, sec, wasBody) {
-      const gapOk = lineObj.gap != null && lineObj.gap > 0 && lineObj.gap <= 1.5 * Math.max(lineObj.size || 12, 1);
+      // limit = 1.35 x this document's own normal line pitch (set at import time), so
+      // looser Arabic line spacing still counts as a wrap while a blank line (~2x) does not
+      const gapOk = lineObj.gap != null && lineObj.gap > 0 &&
+        lineObj.gap <= (lineObj.limit || 1.5 * Math.max(lineObj.size || 12, 1));
       const rtl = lineObj.arabic || (wasBody && wasBody.arabic);
       // English lines join on spacing alone; Arabic/Urdu lines must also have wrapped
       // at the column edge, and a fully bold line is a citation heading, never a wrap.
