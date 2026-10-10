@@ -130,6 +130,8 @@
       return {
         text: runs.map(r => r.str).join(''),
         size: Math.max(0, ...line.map(it => it.size || 0)),
+        y: line[0].y,
+        arabic: AR_RE.test(joined),
         runs,
         letterhead: line.some(it => it.letterhead)
       };

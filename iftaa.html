@@ -1857,8 +1857,14 @@
         // largest font size (used to spot the size-24 title), and runs keeps each
         // text run's bold/underline flags so that formatting survives into the
         // posted fatwa exactly as it appeared in the PDF.
+        // gap = distance down from the previous line; the parser uses it to tell a
+        // wrapped line (normal spacing) from a real paragraph break (bigger gap).
+        let prevY = null;
         for (const line of DunyPdfLines.build(records)) {
-          if (!line.letterhead) lineObjs.push({ text: line.text, size: line.size, runs: line.runs });
+          if (line.letterhead) { prevY = null; continue; }
+          lineObjs.push({ text: line.text, size: line.size, runs: line.runs, arabic: line.arabic,
+                          gap: prevY === null ? null : prevY - line.y });
+          prevY = line.y;
         }
         lineObjs.push({ text: '', size: 0, runs: [] });
       }
@@ -1951,6 +1957,20 @@
     if (qIdx === -1) qIdx = 0;
 
     let section = 'question';
+    // Lines the PDF wrapped at its own page width should flow into one paragraph
+    // (only a bigger-than-normal line gap is a real paragraph break), otherwise the
+    // text breaks early on the website. lastBody remembers the previous line if it
+    // was question/answer text.
+    let lastBody = null;
+    function pushBody(parts, html, lineObj, sec, wasBody) {
+      const gapOk = lineObj.gap != null && lineObj.gap > 0 && lineObj.gap <= 1.5 * Math.max(lineObj.size || 12, 1);
+      if (wasBody && wasBody.sec === sec && gapOk && !lineObj.arabic && !wasBody.arabic && parts.length) {
+        parts[parts.length - 1] += ' ' + html;
+      } else {
+        parts.push(html);
+      }
+      lastBody = { sec, arabic: !!lineObj.arabic };
+    }
     let writtenByPending = false;
     let answerHeadingPending = false;
     let writtenBy = '', date = '';
@@ -1959,6 +1979,7 @@
     for (let i = qIdx; i < lineObjs.length; i++) {
       const lineObj = lineObjs[i];
       const trimmed = lineObj.text.trim();
+      const wasBody = lastBody; lastBody = null;      // any line that isn't body text ends the paragraph
       if (!trimmed) continue;
 
       // Only ever consulted on the one line right after "Answer:" — drops the
@@ -1973,8 +1994,8 @@
       // Once the references begin, Urdu/Arabic citations can contain words like
       // "سوال" (question) or "جواب" (answer) — they must not restart a section.
       const inRefs = section === 'refs';
-      if (!inRefs && (m = trimmed.match(Q_RE))) { section = 'question'; const rest = restHtml(lineObj, m); if (rest.trim()) qParts.push(rest); continue; }
-      if (!inRefs && (m = trimmed.match(A_RE))) { section = 'answer'; answerHeadingPending = true; const rest = restHtml(lineObj, m); if (rest.trim()) aParts.push(rest); continue; }
+      if (!inRefs && (m = trimmed.match(Q_RE))) { section = 'question'; const rest = restHtml(lineObj, m); if (rest.trim()) pushBody(qParts, rest, lineObj, 'question', null); continue; }
+      if (!inRefs && (m = trimmed.match(A_RE))) { section = 'answer'; answerHeadingPending = true; const rest = restHtml(lineObj, m); if (rest.trim()) pushBody(aParts, rest, lineObj, 'answer', null); continue; }
       if ((m = trimmed.match(REF_RE))) { section = 'refs';   const rest = restHtml(lineObj, m); if (rest.trim()) rParts.push(rest); continue; }
       if (ALLAH_RE.test(trimmed)) { section = 'closing'; continue; }
       if ((m = trimmed.match(WB_RE))) {
@@ -1992,8 +2013,8 @@
       if (HIJRI_MONTH_RE.test(trimmed) && /\d/.test(trimmed)) { section = 'refs'; continue; }
 
       const html = runsToHtml(lineObj.runs);
-      if (section === 'question') qParts.push(html);
-      else if (section === 'answer') aParts.push(html);
+      if (section === 'question') pushBody(qParts, html, lineObj, 'question', wasBody);
+      else if (section === 'answer') pushBody(aParts, html, lineObj, 'answer', wasBody);
       else if (section === 'refs') rParts.push(html);
       // 'approvers' and 'closing' lines (the fixed muftis, "Student, ..." leftovers) are dropped
     }
