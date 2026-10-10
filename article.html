@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Research Paper — Darul Iftaa New York</title>
+  <meta name="description" content="Read a research paper from Darul Iftaa New York." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="js/firebase-config.js"></script>
+  <script src="js/bidi.js"></script>
+  <script src="js/docx-lines.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="js/papers.js"></script>
+  <style>
+    .fatwa-detail-section { padding: 3rem 0 5rem; }
+    .fatwa-detail-card {
+      max-width: 1080px; margin: 0 auto; background: var(--white);
+      border-radius: var(--radius-lg); border: 1px solid var(--border);
+      box-shadow: var(--shadow); padding: 2.5rem 3rem 3rem;
+    }
+    @media (max-width: 640px) { .fatwa-detail-card { padding: 1.75rem 1.25rem 2.25rem; } }
+    .fatwa-back-link {
+      display: inline-flex; align-items: center; gap: .4rem; color: var(--text-muted);
+      font-size: .85rem; font-weight: 600; margin-bottom: 1.25rem;
+    }
+    .fatwa-back-link:hover { color: var(--gold-dark); }
+    .fatwa-detail-title { font-size: clamp(1.5rem, 3vw, 1.9rem); color: var(--navy); margin-bottom: 2rem; line-height: 1.3; }
+    .fatwa-detail-date { font-size: .82rem; color: var(--text-muted); margin: 0; }
+
+    .fatwa-cat-badge { display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; padding: .25rem .75rem; border-radius: 50px; }
+    .cat-salah{background:rgba(26,75,140,.1);color:#1A4B8C}
+    .cat-zakaat{background:rgba(201,162,39,.15);color:#9E7D18}
+    .cat-sawm{background:rgba(46,134,193,.12);color:#1A6090}
+    .cat-business{background:rgba(39,174,96,.12);color:#1E8449}
+    .cat-food{background:rgba(231,76,60,.1);color:#B03A2E}
+    .cat-marriage{background:rgba(155,89,182,.12);color:#7D3C98}
+    .cat-divorce{background:rgba(192,57,43,.1);color:#922B21}
+    .cat-purification{background:rgba(21,101,192,.1);color:#1565C0}
+    .cat-funerals{background:rgba(69,69,69,.1);color:#424242}
+    .cat-hajj{background:rgba(0,121,107,.1);color:#00695C}
+    .cat-inheritance{background:rgba(74,20,140,.1);color:#4A148C}
+    .cat-endowments{background:rgba(230,81,0,.1);color:#E65100}
+    .cat-oaths{background:rgba(1,87,155,.1);color:#01579B}
+    .cat-general{background:rgba(12,31,61,.08);color:var(--navy)}
+    .cat-prohibition{background:rgba(120,40,140,.1);color:#6B2179}
+
+    .fatwa-question-box { background: var(--white); border: 1px solid var(--border); border-left: 6px solid var(--gold); border-radius: 8px; padding: 2rem; margin-bottom: 2.5rem; position: relative; overflow: hidden; }
+    .question-label { display: inline-flex; align-items: center; gap: .5rem; background: var(--navy); border: 1px solid var(--navy); color: var(--gold-light); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .85rem; border-radius: 50px; margin-bottom: 1rem; }
+    .fatwa-question-text { color: var(--navy); font-size: 1.05rem; line-height: 1.8; margin: 0; }
+    .answer-label { display: inline-flex; align-items: center; gap: .5rem; background: rgba(176,141,59,.12); border: 1px solid rgba(176,141,59,.3); color: var(--gold-dark); font-size: .75rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; padding: .3rem .85rem; border-radius: 50px; margin-bottom: 1.25rem; }
+    .fatwa-answer-arabic { text-align: center; direction: rtl; color: var(--gold-dark); font-weight: 700; margin: 0 0 1.5rem; }
+    .fatwa-answer-body { font-size: .97rem; line-height: 1.9; color: #444; }
+    .fatwa-answer-body p { margin-bottom: 1.1rem; }
+    .fatwa-answer-body strong { font-weight: 700; color: var(--navy); }
+    .fatwa-answer-body u { text-decoration: underline; }
+    .refs-heading { font-size: .88rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #888; margin: 1.75rem 0 .85rem; padding-top: 1.5rem; border-top: 2px solid #eee; }
+    .refs-heading i { color: var(--gold); margin-right: .4rem; }
+    .refs-body { font-family: 'Amiri', serif; font-size: 1.15rem; line-height: 2; color: #1a1a1a; }
+
+    .fatwa-closing { margin-top: 2.5rem; border-top: 2px solid #eee; padding-top: 2rem; }
+    .allah-knows-best { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-style: italic; color: var(--navy); margin-bottom: 1.75rem; display: flex; align-items: center; gap: .6rem; }
+    .allah-knows-best::before { content: ''; display: inline-block; width: 4px; height: 1.2em; background: var(--gold); border-radius: 2px; flex-shrink: 0; }
+    .attribution-list { display: flex; flex-direction: column; gap: 1rem; }
+    .attr-role { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #888; margin-bottom: .15rem; }
+    .attr-name { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--navy); font-weight: 600; margin-bottom: .1rem; }
+    .attr-title { font-size: .83rem; color: #555; }
+    .fatwa-meta-footer {
+      display: flex; align-items: center; flex-wrap: wrap; gap: .85rem;
+      margin-top: 2rem; padding-top: 1.75rem; border-top: 2px solid #eee;
+    }
+
+    .fatwa-not-found { text-align: center; padding: 4rem 1rem; }
+    .fatwa-not-found i { font-size: 2.5rem; color: var(--border); margin-bottom: 1rem; display: block; }
+
+    .fatwa-share { display: flex; gap: .6rem; margin-top: 2.5rem; }
+    .fatwa-share a, .fatwa-share button { background: var(--off-white); border: 1px solid var(--border); color: var(--text-muted); padding: .5rem 1rem; border-radius: 50px; font-size: .8rem; font-weight: 600; font-family: 'Poppins', sans-serif; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; }
+    .fatwa-share a:hover, .fatwa-share button:hover { border-color: var(--gold); color: var(--gold-dark); }
+
+    /* ---- Serial number + prev/next navigation (bottom of every fatwa page) ---- */
+    .fatwa-serial-line {
+      text-align: center; font-size: .78rem; font-weight: 600; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--text-muted); margin: 3rem auto 1rem; max-width: 1080px;
+    }
+    .fatwa-serial-line span { color: var(--navy); }
+    .fatwa-pager {
+      max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+    }
+    @media (max-width: 640px) { .fatwa-pager { grid-template-columns: 1fr; } }
+    .fatwa-pager-link, .fatwa-pager-empty {
+      display: flex; align-items: center; gap: .85rem; background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1.1rem 1.3rem; transition: var(--transition); min-height: 76px;
+    }
+    .fatwa-pager-link:hover { border-color: var(--gold); box-shadow: var(--shadow); transform: translateY(-2px); }
+    .fatwa-pager-empty { opacity: .4; }
+    .fatwa-pager-next { justify-content: flex-end; text-align: right; }
+    .fatwa-pager-icon { flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: var(--gold-pale); color: var(--gold-dark); display: flex; align-items: center; justify-content: center; font-size: .85rem; }
+    .fatwa-pager-text { min-width: 0; }
+    .fatwa-pager-label { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: .2rem; }
+    .fatwa-pager-title { font-size: .9rem; font-weight: 600; color: var(--navy); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+
+    /* Fatwa page typography: Times New Roman, 12pt, throughout (icons excluded) */
+    .fatwa-detail-section, .fatwa-detail-section *:not(i) {
+      font-family: 'Times New Roman', Times, serif !important;
+      font-size: 12pt !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-brand">
+        <div class="nav-logo">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 4C20 4 8 10 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 10 20 4 20 4Z" fill="white" opacity="0.9"/>
+            <path d="M20 8L21.5 14H28L22.5 17.5L24.5 24L20 20.5L15.5 24L17.5 17.5L12 14H18.5Z" fill="#B08D3B"/>
+            <circle cx="30" cy="8" r="4" fill="white" opacity="0.85"/>
+            <path d="M30 5.5C31.5 6.5 32 8 30 9C28.5 7.5 28 5.5 30 5.5Z" fill="#B08D3B"/>
+          </svg>
+        </div>
+        <div class="nav-title">
+          <span>Darul Iftaa New York</span>
+          <span>Dept. of Darul Uloom New York</span>
+        </div>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="about.html">About Us</a></li>
+        <li><a href="faculty.html">Faculty</a></li>
+        <li><a href="services.html">Services</a></li>
+        <li><a href="iftaa-course.html">Iftaa Course</a></li>
+        <li><a href="iftaa.html">Fataawas</a></li>
+        <li class="nav-dropdown">
+          <a href="articles.html" class="active">Resources <i class="fas fa-chevron-down nav-caret"></i></a>
+          <div class="nav-dropdown-menu">
+            <a href="articles.html"><i class="fas fa-file-lines"></i> Research Papers</a>
+            <a href="magazine.html"><i class="fas fa-book-open"></i> Monthly Magazine</a>
+            <a href="events.html"><i class="fas fa-calendar-days"></i> Events</a>
+          </div>
+        </li>
+        <li><a href="contact.html?subject=fatwa" class="nav-donate-btn">Ask A Question</a></li>
+      </ul>
+      <button class="hamburger" aria-label="Toggle menu"><span></span><span></span><span></span></button>
+    </div>
+    <nav class="mobile-nav">
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="faculty.html">Faculty</a>
+      <a href="services.html">Services</a>
+      <a href="iftaa-course.html">Iftaa Course</a>
+      <a href="iftaa.html">Fataawas</a>
+      <a href="articles.html" class="active">Research Papers</a>
+      <a href="magazine.html">Monthly Magazine</a>
+      <a href="events.html">Events</a>
+      <a href="contact.html?subject=fatwa">Ask A Question</a>
+    </nav>
+  </nav>
+
+  <section class="fatwa-detail-section">
+    <div class="container">
+      <a href="articles.html" class="fatwa-back-link"><i class="fas fa-arrow-left"></i> Back to Research Papers</a>
+      <div class="fatwa-detail-card" id="fatwa-detail">
+        <div class="fatwa-not-found">
+          <i class="fas fa-circle-notch fa-spin"></i>
+          <p>Loading research paper&hellip;</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="nav-logo" style="width:52px;height:52px;margin-bottom:1rem;">
+            <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 4C20 4 8 10 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 10 20 4 20 4Z" fill="white" opacity="0.9"/>
+              <path d="M20 8L21.5 14H28L22.5 17.5L24.5 24L20 20.5L15.5 24L17.5 17.5L12 14H18.5Z" fill="#B08D3B"/>
+              <circle cx="30" cy="8" r="4" fill="white" opacity="0.85"/>
+              <path d="M30 5.5C31.5 6.5 32 8 30 9C28.5 7.5 28 5.5 30 5.5Z" fill="#B08D3B"/>
+            </svg>
+          </div>
+          <h3>Darul Iftaa New York</h3>
+          <p class="tagline">Dept. of Darul Uloom New York</p>
+          <p>Providing free, confidential, and authentic Islamic legal rulings to the Muslim community of New York, rooted in the Quran and Sunnah.</p>
+          <div class="social-links">
+            <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+            <a href="#" class="social-link"><i class="fab fa-whatsapp"></i></a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="index.html"><i class="fas fa-chevron-right"></i> Home</a></li>
+            <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
+            <li><a href="faculty.html"><i class="fas fa-chevron-right"></i> Faculty</a></li>
+            <li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li>
+            <li><a href="iftaa-course.html"><i class="fas fa-chevron-right"></i> Iftaa Course</a></li>
+            <li><a href="iftaa.html"><i class="fas fa-chevron-right"></i> Fataawas</a></li>
+            <li><a href="articles.html"><i class="fas fa-chevron-right"></i> Research Papers</a></li>
+            <li><a href="magazine.html"><i class="fas fa-chevron-right"></i> Monthly Magazine</a></li>
+            <li><a href="events.html"><i class="fas fa-chevron-right"></i> Events</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Get Involved</h4>
+          <ul>
+            <li><a href="contact.html?subject=fatwa"><i class="fas fa-chevron-right"></i> Ask A Question</a></li>
+            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+            <li><a href="donate.html"><i class="fas fa-chevron-right"></i> Donate</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact Info</h4>
+          <div class="footer-contact-item"><i class="fas fa-map-marker-alt"></i><span>150-11 Hillside Avenue, Jamaica, NY 11432</span></div>
+          <div class="footer-contact-item"><i class="fas fa-phone"></i><a href="tel:+12125550142">(212) 555-0142</a></div>
+          <div class="footer-contact-item"><i class="fas fa-envelope"></i><a href="mailto:fatwa@duny.us">fatwa@duny.us</a></div>
+          <div class="footer-contact-item"><i class="fas fa-clock"></i><span>Mon&ndash;Fri: 9:00 AM &ndash; 5:00 PM</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>&copy; 2025 <span>Darul Iftaa New York</span>. All rights reserved. &nbsp;|&nbsp; A department of Darul Uloom New York.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script>
+  const P = DunyPapers;
+  P.ensureAdminButton();
+  P.init();
+
+  const catClass = {
+    'Salah':'cat-salah','Zakaat':'cat-zakaat','Sawm':'cat-sawm','Business & Finance':'cat-business',
+    'Food & Drink':'cat-food','Marriage & Family':'cat-marriage','Divorce':'cat-divorce',
+    'Purification':'cat-purification','Funerals':'cat-funerals','Hajj & Umrah':'cat-hajj',
+    'Inheritance':'cat-inheritance','Endowments':'cat-endowments','Oaths & Vows':'cat-oaths',
+    'General':'cat-general','Prohibition & Permissibility':'cat-prohibition'
+  };
+  let current = null;
+
+  function renderNotFound() {
+    document.getElementById('fatwa-detail').innerHTML = `
+      <div class="fatwa-not-found">
+        <i class="fas fa-book-open"></i>
+        <h2 style="margin-bottom:.5rem;">Research paper not found</h2>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;">This paper may have been moved or removed.</p>
+        <a href="articles.html" class="btn btn-navy"><i class="fas fa-arrow-left"></i> Browse Research Papers</a>
+      </div>`;
+  }
+
+  function render(p) {
+    current = p;
+    document.title = p.title + ' — Darul Iftaa New York';
+    const cls = catClass[p.category] || 'cat-general';
+    const refs = (p.references || '').trim();
+    const refsBlock = P.stripHtml(refs).trim() ? `
+      <h4 class="refs-heading"><i class="fas fa-book-open"></i> References</h4>
+      <div class="refs-body">${DunyBidi.wrap(refs)}</div>` : '';
+    document.getElementById('fatwa-detail').innerHTML = `
+      <h1 class="fatwa-detail-title" dir="auto">${P.esc(p.title)}</h1>
+      ${p.summary ? `<div class="fatwa-question-box">
+        <span class="question-label"><i class="fas fa-align-left"></i> Summary</span>
+        <div class="fatwa-question-text" dir="auto">${P.esc(p.summary)}</div>
+      </div>` : ''}
+      <div class="fatwa-answer-body">${DunyBidi.wrap(p.body)}</div>
+      ${refsBlock}
+      <div class="fatwa-closing">
+        <div class="attribution-list">
+          ${p.author ? `<div class="attr-entry">
+            <div class="attr-role">Written by</div>
+            <div class="attr-name">${P.esc(p.author)}</div>
+          </div>` : ''}
+        </div>
+        <div class="fatwa-meta-footer">
+          <span class="fatwa-detail-date">${P.esc(P.formatDate(p.date))}</span>
+          ${p.category ? `<span class="fatwa-cat-badge ${cls}"><i class="fas fa-book-open"></i> ${P.esc(p.category)}</span>` : ''}
+        </div>
+        <div class="fatwa-share">
+          <a href="articles.html"><i class="fas fa-arrow-left"></i> Back to Research Papers</a>
+          <button class="lib-admin-only" id="edit-paper-btn"><i class="fas fa-pen"></i> Edit</button>
+          <button class="lib-admin-only" id="delete-paper-btn"><i class="fas fa-trash"></i> Delete</button>
+        </div>
+      </div>`;
+    document.getElementById('edit-paper-btn').addEventListener('click', async () => {
+      let topics = [];
+      try { topics = [...new Set((await P.loadAll()).map(x => x.category).filter(Boolean))]; } catch (e) {}
+      P.openEditor(current, topics, () => load());
+    });
+    document.getElementById('delete-paper-btn').addEventListener('click', async () => {
+      try { if (await P.removePaper(current)) location.href = 'articles.html'; }
+      catch (e) { alert('Could not delete: ' + e.message); }
+    });
+  }
+
+  async function load() {
+    const slug = new URLSearchParams(location.search).get('slug');
+    if (!slug) { renderNotFound(); return; }
+    try {
+      const p = await P.loadOne(slug);
+      if (!p) { renderNotFound(); return; }
+      render(p);
+    } catch (e) { console.warn('[DUNY] load failed:', e); renderNotFound(); }
+  }
+  load();
+  </script>
+</body>
+</html>

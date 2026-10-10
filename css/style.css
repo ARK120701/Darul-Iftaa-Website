@@ -1688,3 +1688,22 @@ body.lib-is-admin .lib-toolbar .btn.lib-admin-only { display: inline-flex !impor
 /* paragraphs in question/answer text (one block per paragraph, see js/bidi.js) */
 .fatwa-answer-body > div[dir], .fatwa-question-text > div[dir] { margin-bottom: 0.9rem; }
 .fatwa-answer-body > div:last-child, .fatwa-question-text > div:last-child { margin-bottom: 0; }
+
+/* ---- Research papers: admin editor ---- */
+.lib-modal.lib-modal-wide { max-width: 780px; }
+.paper-admin-bar { margin-bottom: 1.25rem; }
+body.lib-is-admin .paper-admin-bar.lib-admin-only { display: block !important; }
+.paper-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 560px) { .paper-row { grid-template-columns: 1fr; } }
+.paper-import { background: var(--parchment); border: 1px dashed var(--gold); border-radius: var(--radius); padding: 1rem; margin-bottom: 1.25rem; }
+.paper-import label { margin-bottom: 0.5rem; }
+.paper-import input { background: var(--white); }
+.paper-field { margin-bottom: 1.25rem; }
+.paper-label { display: block; font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #555; margin-bottom: 0.35rem; }
+.paper-toolbar { display: flex; gap: 0.35rem; margin-bottom: 0.35rem; }
+.paper-toolbar button { width: 34px; height: 30px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); color: var(--navy); font-size: 0.8rem; }
+.paper-toolbar button:hover { border-color: var(--gold); color: var(--gold-dark); }
+.paper-editor { min-height: 180px; max-height: 340px; overflow-y: auto; padding: 0.75rem; border: 1px solid var(--border); border-radius: 8px; background: var(--parchment); line-height: 1.8; }
+.paper-editor:focus { outline: 2px solid var(--gold-light); }
+.paper-editor h3 { font-size: 1.15rem; margin: 0.8rem 0 0.4rem; }
+.fatwa-answer-body h3 { font-weight: 700; color: var(--navy); margin: 1.6rem 0 0.7rem; }

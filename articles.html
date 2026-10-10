@@ -4,12 +4,341 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Research Papers — Darul Iftaa New York</title>
-  <meta name="description" content="Read and download research papers and articles from Darul Iftaa New York." />
+  <meta name="description" content="Read research papers from Darul Iftaa New York." />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="js/firebase-config.js"></script>
+  <script src="js/bidi.js"></script>
+  <script src="js/docx-lines.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="js/papers.js"></script>
+  <style>
+    /* ---- Iftaa Search Section ---- */
+    .iftaa-search-section {
+      background: var(--off-white);
+      border-bottom: 2px solid var(--border);
+      padding: 2rem 0;
+    }
+    .search-bar-wrap {
+      position: relative;
+      max-width: 680px;
+      margin: 0 auto 1.25rem;
+    }
+    .search-bar-wrap i.fa-search {
+      position: absolute;
+      left: 1.1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+    #fatwa-search {
+      width: 100%;
+      padding: 0.9rem 3rem 0.9rem 2.75rem;
+      border: 2px solid var(--border);
+      border-radius: 50px;
+      font-size: 0.95rem;
+      font-family: 'Poppins', sans-serif;
+      color: var(--text-body);
+      background: var(--white);
+      outline: none;
+      transition: var(--transition);
+    }
+    #fatwa-search:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 4px rgba(201,162,39,0.12);
+    }
+    #clear-search {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--text-muted);
+      color: white;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    #clear-search.visible { display: flex; }
+    .category-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .cat-filter-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      border: 2px solid var(--border);
+      background: var(--white);
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: 'Poppins', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .cat-filter-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold-dark);
+    }
+    .cat-filter-btn.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: var(--gold);
+    }
+
+    /* ---- Fatwa Grid ---- */
+    .iftaa-main { padding: 3rem 0 5rem; }
+    .results-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .results-count {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .results-count strong { color: var(--navy); }
+    .sort-select {
+      padding: 0.4rem 0.85rem;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-family: 'Poppins', sans-serif;
+      color: var(--text-body);
+      background: var(--white);
+      outline: none;
+      cursor: pointer;
+    }
+    .pdf-attach-row { margin-bottom: 1.25rem; font-size: 0.85rem; }
+    .pdf-attach-row label { display: block; font-weight: 600; color: #444; margin-bottom: 0.35rem; }
+    .pdf-attach-status { margin-top: 0.35rem; color: #666; }
+    .fatwa-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.75rem;
+    }
+    .fatwa-card {
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+    }
+    .fatwa-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: var(--transition);
+    }
+    .fatwa-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(201,162,39,0.35);
+      color: inherit;
+    }
+    .fatwa-card:hover::before { transform: scaleX(1); }
+    .fatwa-card-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+    .fatwa-cat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      margin-bottom: 0.85rem;
+    }
+    .fatwa-serial-badge {
+      flex-shrink: 0;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--off-white);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 0.2rem 0.65rem;
+      font-family: 'Poppins', sans-serif;
+      white-space: nowrap;
+    }
+    .cat-salah        { background: rgba(26,75,140,0.1);   color: #1A4B8C; }
+    .cat-zakaat       { background: rgba(201,162,39,0.15); color: #9E7D18; }
+    .cat-sawm         { background: rgba(46,134,193,0.12); color: #1A6090; }
+    .cat-business     { background: rgba(39,174,96,0.12);  color: #1E8449; }
+    .cat-food         { background: rgba(231,76,60,0.1);   color: #B03A2E; }
+    .cat-marriage     { background: rgba(155,89,182,0.12); color: #7D3C98; }
+    .cat-divorce      { background: rgba(192,57,43,0.1);   color: #922B21; }
+    .cat-purification { background: rgba(21,101,192,0.1);  color: #1565C0; }
+    .cat-funerals     { background: rgba(69,69,69,0.1);    color: #424242; }
+    .cat-hajj         { background: rgba(0,121,107,0.1);   color: #00695C; }
+    .cat-inheritance  { background: rgba(74,20,140,0.1);   color: #4A148C; }
+    .cat-endowments   { background: rgba(230,81,0,0.1);    color: #E65100; }
+    .cat-oaths        { background: rgba(1,87,155,0.1);    color: #01579B; }
+    .cat-general      { background: rgba(12,31,61,0.08);   color: var(--navy); }
+    .cat-prohibition  { background: rgba(120,40,140,0.1);  color: #6B2179; }
+    .fatwa-card h3 {
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+      color: var(--navy);
+      line-height: 1.35;
+    }
+    .fatwa-arabic-title {
+      font-family: 'Amiri', serif;
+      font-size: 0.95rem;
+      color: var(--gold-dark);
+      direction: rtl;
+      margin-bottom: 0.75rem;
+      line-height: 1.7;
+    }
+    .fatwa-excerpt {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      flex: 1;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .fatwa-card-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      background: var(--off-white);
+    }
+    .fatwa-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+      font-size: 0.77rem;
+      color: var(--text-muted);
+    }
+    .fatwa-meta-row span { display: flex; align-items: center; gap: 0.3rem; }
+    .fatwa-meta-row i { color: var(--gold); font-size: 0.72rem; }
+    .fatwa-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .kw-pill {
+      background: var(--navy);
+      color: rgba(255,255,255,0.8);
+      font-size: 0.68rem;
+      font-weight: 500;
+      padding: 0.18rem 0.6rem;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      font-family: 'Poppins', sans-serif;
+    }
+    .kw-pill:hover {
+      background: var(--gold);
+      color: var(--navy);
+    }
+
+    /* ---- Empty / Loading state ---- */
+    .no-results {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+    .no-results i { font-size: 3rem; color: var(--border); margin-bottom: 1rem; display: block; }
+    .loading-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem;
+      color: var(--text-muted);
+    }
+    .loading-state i { font-size: 2rem; color: var(--gold); margin-bottom: 1rem; display: block; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Active keyword filter banner ---- */
+    .active-filter-banner {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--gold-pale);
+      border: 1px solid rgba(201,162,39,0.4);
+      border-radius: var(--radius);
+      padding: 0.6rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--navy);
+    }
+    .active-filter-banner.visible { display: flex; }
+    .active-filter-banner strong { color: var(--gold-dark); }
+    .clear-filter-link { margin-left: auto; color: var(--blue); cursor: pointer; font-weight: 600; font-size: 0.82rem; }
+
+    /* ---- Upload CTA ---- */
+    .upload-cta {
+      background: linear-gradient(135deg, var(--navy), var(--blue));
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      margin-top: 3rem;
+      position: relative;
+      overflow: hidden;
+      flex-wrap: wrap;
+    }
+    .upload-cta::before {
+      content:'';
+      position:absolute;inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='rgba(201%2C162%2C39%2C0.08)' stroke-width='1'%3E%3Cpolygon points='30,4 35,20 52,15 42,29 55,38 38,40 35,57 30,43 25,57 22,40 5,38 18,29 8,15 25,20'/%3E%3C/g%3E%3C/svg%3E");
+      background-size:60px;
+    }
+    .upload-cta h3 { color: var(--white); margin-bottom: 0.3rem; position: relative; }
+    .upload-cta p { color: rgba(255,255,255,0.7); font-size: 0.88rem; margin: 0; position: relative; }
+    .upload-cta .btn { position: relative; flex-shrink: 0; }
+
+    @media (max-width: 1024px) { .fatwa-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px)  { .fatwa-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .iftaa-search-section { top: 0; } }
+
+    /* Fataawas page typography: Times New Roman, 12pt, throughout (icons excluded) */
+    #fataawas-hero, #fataawas-hero *:not(i),
+    .iftaa-search-section, .iftaa-search-section *:not(i),
+    .iftaa-main, .iftaa-main *:not(i) {
+      font-family: 'Times New Roman', Times, serif !important;
+      font-size: 12pt !important;
+    }
+  </style>
 </head>
 <body>
 
@@ -38,7 +367,7 @@
         <li><a href="iftaa-course.html">Iftaa Course</a></li>
         <li><a href="iftaa.html">Fataawas</a></li>
         <li class="nav-dropdown">
-          <a href="articles.html">Resources <i class="fas fa-chevron-down nav-caret"></i></a>
+          <a href="articles.html" class="active">Resources <i class="fas fa-chevron-down nav-caret"></i></a>
           <div class="nav-dropdown-menu">
             <a href="articles.html"><i class="fas fa-file-lines"></i> Research Papers</a>
             <a href="magazine.html"><i class="fas fa-book-open"></i> Monthly Magazine</a>
@@ -56,7 +385,7 @@
       <a href="services.html">Services</a>
       <a href="iftaa-course.html">Iftaa Course</a>
       <a href="iftaa.html">Fataawas</a>
-      <a href="articles.html">Research Papers</a>
+      <a href="articles.html" class="active">Research Papers</a>
       <a href="magazine.html">Monthly Magazine</a>
       <a href="events.html">Events</a>
       <a href="contact.html?subject=fatwa">Ask A Question</a>
@@ -64,23 +393,61 @@
   </nav>
 
   <!-- PAGE HERO -->
-  <section class="page-hero pattern-bg">
+  <section class="page-hero" style="background: linear-gradient(135deg, rgba(12,31,61,.85), rgba(26,75,140,.75)), url('Radd.jpg') center 70%/cover no-repeat;">
     <div class="container">
       <div class="breadcrumb">
         <a href="index.html">Home</a>
         <i class="fas fa-chevron-right"></i>
         <span>Research Papers</span>
       </div>
-      
+      <p class="arabic" style="font-size:1.4rem;margin-bottom:0.5rem;">بُحُوث</p>
       <h1>Research Papers</h1>
-      <p>Scholarly articles and research from Darul Iftaa New York — read online or download as PDF.</p>
+      <p>Scholarly papers and articles from Darul Iftaa New York — read them here on the site.</p>
     </div>
   </section>
 
-  <section class="section-pad">
+  <!-- SEARCH & FILTER -->
+  <div class="iftaa-search-section">
     <div class="container">
-      <div id="lib-toolbar" class="lib-toolbar"></div>
-      <div id="lib-root"></div>
+      <div class="search-bar-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" id="fatwa-search" placeholder="Search by title, author, topic, or keyword…" autocomplete="off" />
+        <button id="clear-search" aria-label="Clear search">&times;</button>
+      </div>
+      <div class="category-filter-bar" id="category-filters"></div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <section class="iftaa-main">
+    <div class="container">
+      <div class="paper-admin-bar lib-admin-only">
+        <button class="btn btn-gold" id="add-paper-btn"><i class="fas fa-plus"></i> Add Research Paper</button>
+      </div>
+      <div class="results-bar">
+        <p class="results-count">Showing <strong id="result-count">0</strong> paper(s)</p>
+        <select class="sort-select" id="sort-select">
+          <option value="newest">Recently Added First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="az">A–Z</option>
+        </select>
+      </div>
+
+      <!-- Active keyword filter indicator -->
+      <div class="active-filter-banner" id="filter-banner">
+        <i class="fas fa-tag" style="color:var(--gold);"></i>
+        Filtering by keyword: <strong id="active-keyword-label"></strong>
+        <span class="clear-filter-link" id="clear-keyword-filter">Clear filter &times;</span>
+      </div>
+
+      <!-- Fatwa cards rendered here -->
+      <div class="fatwa-grid" id="fatwa-grid">
+        <div class="loading-state">
+          <i class="fas fa-circle-notch"></i>
+          Loading research papers…
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -122,12 +489,11 @@
           </ul>
         </div>
         <div class="footer-col">
-          <h4>Donation Categories</h4>
+          <h4>Get Involved</h4>
           <ul>
-            <li><a href="donate.html"><i class="fas fa-chevron-right"></i> Ifta Training Program</a></li>
-            <li><a href="donate.html"><i class="fas fa-chevron-right"></i> Public Fatwa Portal</a></li>
-            <li><a href="donate.html"><i class="fas fa-chevron-right"></i> Zakaat</a></li>
-            <li><a href="donate.html"><i class="fas fa-chevron-right"></i> General Fund</a></li>
+            <li><a href="contact.html?subject=fatwa"><i class="fas fa-chevron-right"></i> Ask A Question</a></li>
+            <li><a href="contact.html"><i class="fas fa-chevron-right"></i> Contact Us</a></li>
+            <li><a href="donate.html"><i class="fas fa-chevron-right"></i> Donate</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -141,18 +507,115 @@
     </div>
     <div class="footer-bottom">
       <div class="container">
-        <p>&copy; 2025 <span>Darul Iftaa New York</span>. All rights reserved. &nbsp;|&nbsp; A department of Darul Uloom New York. We are a registered 501(c)(3) non-profit. All donations are tax-deductible.</p>
+        <p>&copy; 2025 <span>Darul Iftaa New York</span>. All rights reserved. &nbsp;|&nbsp; A department of Darul Uloom New York.</p>
       </div>
     </div>
   </footer>
 
-  <script src="js/firebase-config.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-  <script src="js/library.js"></script>
-  <script>DunyLib.mountList('articles');</script>
   <script src="js/main.js"></script>
+  <script>
+  let allPapers = [];
+  let activeTopic = 'all';
+  let searchQuery = '';
+  let sortOrder = 'newest';
+  const P = DunyPapers;
+  P.ensureAdminButton();
+  P.init();
+
+  const catClass = {
+    'Salah':'cat-salah','Zakaat':'cat-zakaat','Sawm':'cat-sawm','Business & Finance':'cat-business',
+    'Food & Drink':'cat-food','Marriage & Family':'cat-marriage','Divorce':'cat-divorce',
+    'Purification':'cat-purification','Funerals':'cat-funerals','Hajj & Umrah':'cat-hajj',
+    'Inheritance':'cat-inheritance','Endowments':'cat-endowments','Oaths & Vows':'cat-oaths',
+    'General':'cat-general','Prohibition & Permissibility':'cat-prohibition'
+  };
+
+  function topics() { return [...new Set(allPapers.map(p => p.category).filter(Boolean))].sort(); }
+
+  function renderFilters() {
+    const bar = document.getElementById('category-filters');
+    bar.innerHTML = '<button class="cat-filter-btn' + (activeTopic === 'all' ? ' active' : '') + '" data-cat="all">All Topics</button>' +
+      topics().map(t => '<button class="cat-filter-btn' + (activeTopic === t ? ' active' : '') + '" data-cat="' + P.esc(t) + '">' + P.esc(t) + '</button>').join('');
+    bar.querySelectorAll('.cat-filter-btn').forEach(btn => btn.addEventListener('click', () => {
+      activeTopic = btn.dataset.cat;
+      renderFilters();
+      renderPapers();
+    }));
+  }
+
+  function buildCard(p) {
+    const source = p.summary || P.stripHtml(p.body);
+    const excerpt = source.slice(0, 160).trim() + (source.length > 160 ? '…' : '');
+    const cls = catClass[p.category] || 'cat-general';
+    return `
+      <a href="article.html?slug=${encodeURIComponent(p.slug)}" class="fatwa-card">
+        <div class="fatwa-card-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;">
+            <span class="fatwa-cat-badge ${cls}"><i class="fas fa-book-open"></i> ${P.esc(p.category || 'General')}</span>
+          </div>
+          <h3 dir="auto">${P.esc(p.title)}</h3>
+          <p class="fatwa-excerpt" dir="auto">${P.esc(excerpt)}</p>
+        </div>
+        <div class="fatwa-card-footer">
+          <div class="fatwa-meta-row">
+            <span><i class="fas fa-calendar"></i> ${P.esc(P.formatDate(p.date))}</span>
+            ${p.author ? '<span><i class="fas fa-pen-nib"></i> ' + P.esc(p.author) + '</span>' : ''}
+          </div>
+        </div>
+      </a>`;
+  }
+
+  function renderPapers() {
+    let list = allPapers.slice();
+    // newest = most recently added, so a new paper always lands first (top-left)
+    const addedOrder = (a, b) => ((b.added || 0) - (a.added || 0)) || (new Date(b.date) - new Date(a.date));
+    if (sortOrder === 'newest') list.sort(addedOrder);
+    else if (sortOrder === 'oldest') list.sort((a, b) => addedOrder(b, a));
+    else list.sort((a, b) => a.title.localeCompare(b.title));
+    if (activeTopic !== 'all') list = list.filter(p => p.category === activeTopic);
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(p => [p.title, p.author, p.category, p.summary, (p.keywords || []).join(' '), P.stripHtml(p.body)]
+        .join(' ').toLowerCase().includes(q));
+    }
+    const grid = document.getElementById('fatwa-grid');
+    document.getElementById('result-count').textContent = list.length;
+    if (!list.length) {
+      grid.innerHTML = '<div class="no-results"><i class="fas fa-book-open"></i><h3>' +
+        (allPapers.length ? 'No research papers found' : 'Research papers coming soon') + '</h3><p>' +
+        (allPapers.length ? 'Try a different search term or topic.' : 'Papers will be published here, in sha Allah.') + '</p></div>';
+      return;
+    }
+    grid.innerHTML = list.map(buildCard).join('');
+  }
+
+  async function load() {
+    try {
+      allPapers = await P.loadAll();
+    } catch (e) {
+      console.warn('[DUNY] could not load papers:', e);
+      document.getElementById('fatwa-grid').innerHTML = '<div class="no-results"><i class="fas fa-triangle-exclamation"></i><h3>Could not load research papers</h3><p>Please try again later.</p></div>';
+      return;
+    }
+    renderFilters();
+    renderPapers();
+  }
+
+  document.getElementById('fatwa-search').addEventListener('input', function () {
+    searchQuery = this.value.trim();
+    document.getElementById('clear-search').classList.toggle('visible', searchQuery.length > 0);
+    renderPapers();
+  });
+  document.getElementById('clear-search').addEventListener('click', function () {
+    document.getElementById('fatwa-search').value = '';
+    searchQuery = '';
+    this.classList.remove('visible');
+    renderPapers();
+  });
+  document.getElementById('sort-select').addEventListener('change', function () { sortOrder = this.value; renderPapers(); });
+  document.getElementById('add-paper-btn').addEventListener('click', () =>
+    P.openEditor(null, topics(), slug => { location.href = 'article.html?slug=' + encodeURIComponent(slug); }));
+  load();
+  </script>
 </body>
 </html>
