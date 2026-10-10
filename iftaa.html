@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="js/pdf-lines.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -1760,31 +1761,33 @@
         const page = await pdf.getPage(i);
         const [content, opList] = await Promise.all([page.getTextContent(), page.getOperatorList()]);
         const underlines = findUnderlineSegments(opList);
-        let lastY = null, runs = [], lineSize = 0, lineIsLetterhead = false;
-        const flush = () => {
-          if (!lineIsLetterhead) lineObjs.push({ text: runs.map(r => r.str).join(''), size: lineSize, runs });
-          runs = []; lineSize = 0; lineIsLetterhead = false;
-        };
-        for (const item of content.items) {
+        // One record per pdf.js text item. js/pdf-lines.js then rebuilds the lines
+        // from glyph positions — pdf.js's own item order scrambles Arabic/Urdu.
+        const records = content.items.map(item => {
           const size = Math.hypot(item.transform[0], item.transform[1]) || 0;
-          if (lastY !== null && Math.abs(item.transform[5] - lastY) > 2) flush();
           // content.styles[].fontFamily is only a generic CSS fallback ("serif"/
           // "sans-serif") — the real embedded PostScript name (e.g. "Garamond-Bold")
           // lives on the resolved font object in commonObjs.
           let realFontName = '';
           try { const f = page.commonObjs.get(item.fontName); realFontName = (f && f.name) || ''; } catch (e) { /* not resolved */ }
-          // The department's letterhead (name/address/contact line) repeats on
-          // every page in Garamond and isn't part of the fatwa itself — drop it.
-          if (/garamond/i.test(realFontName)) lineIsLetterhead = true;
-          const bold = /bold/i.test(realFontName);
           const y = item.transform[5];
           const x0 = item.transform[4], x1 = x0 + (item.width || 0);
-          const underline = underlines.some(u => Math.abs(u.y - y) < 4 && u.x0 < x1 && u.x1 > x0);
-          runs.push({ str: item.str, bold, underline });
-          lineSize = Math.max(lineSize, size);
-          lastY = y;
+          return {
+            str: item.str, x: x0, y, w: item.width || 0, size,
+            bold: /bold/i.test(realFontName),
+            underline: underlines.some(u => Math.abs(u.y - y) < 4 && u.x0 < x1 && u.x1 > x0),
+            // The department's letterhead (name/address/contact line) repeats on
+            // every page in Garamond and isn't part of the fatwa itself — drop it.
+            letterhead: /garamond/i.test(realFontName)
+          };
+        });
+        // Each entry is one visual line: { text, size, runs } — size is the line's
+        // largest font size (used to spot the size-24 title), and runs keeps each
+        // text run's bold/underline flags so that formatting survives into the
+        // posted fatwa exactly as it appeared in the PDF.
+        for (const line of DunyPdfLines.build(records)) {
+          if (!line.letterhead) lineObjs.push({ text: line.text, size: line.size, runs: line.runs });
         }
-        if (runs.length) flush();
         lineObjs.push({ text: '', size: 0, runs: [] });
       }
       const parsed = parseFatwaText(lineObjs);
@@ -1895,8 +1898,11 @@
       }
 
       let m;
-      if ((m = trimmed.match(Q_RE))) { section = 'question'; const rest = restHtml(lineObj, m); if (rest.trim()) qParts.push(rest); continue; }
-      if ((m = trimmed.match(A_RE))) { section = 'answer'; answerHeadingPending = true; const rest = restHtml(lineObj, m); if (rest.trim()) aParts.push(rest); continue; }
+      // Once the references begin, Urdu/Arabic citations can contain words like
+      // "سوال" (question) or "جواب" (answer) — they must not restart a section.
+      const inRefs = section === 'refs';
+      if (!inRefs && (m = trimmed.match(Q_RE))) { section = 'question'; const rest = restHtml(lineObj, m); if (rest.trim()) qParts.push(rest); continue; }
+      if (!inRefs && (m = trimmed.match(A_RE))) { section = 'answer'; answerHeadingPending = true; const rest = restHtml(lineObj, m); if (rest.trim()) aParts.push(rest); continue; }
       if ((m = trimmed.match(REF_RE))) { section = 'refs';   const rest = restHtml(lineObj, m); if (rest.trim()) rParts.push(rest); continue; }
       if (ALLAH_RE.test(trimmed)) { section = 'closing'; continue; }
       if ((m = trimmed.match(WB_RE))) {
