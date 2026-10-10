@@ -84,6 +84,15 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
     btn.disabled = true;
 
+    // Replies from fatwa@duny.us go straight to the person asking (Reply-To), and the
+    // subject line names them so the inbox is easy to scan.
+    const askerName = (contactForm.querySelector('[name="Full Name"]')?.value || '').trim();
+    const askerEmail = (contactForm.querySelector('[name="Email"]')?.value || '').trim();
+    const replyTo = document.getElementById('reply-to');
+    if (replyTo) replyTo.value = askerEmail;
+    const subject = contactForm.querySelector('[name="_subject"]');
+    if (subject) subject.value = 'New question from ' + (askerName || askerEmail || 'a visitor') + ' — Darul Iftaa New York';
+
     fetch(contactForm.action, {
       method: 'POST',
       headers: { 'Accept': 'application/json' },
