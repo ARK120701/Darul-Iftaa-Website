@@ -1,18 +1,24 @@
 rules_version = '2';
 
 // Uploaded PDFs live in four folders: fatawaas/, articles/, magazine/ and events/.
-// Anyone may read (so visitors can read/download); only the signed-in admin may
-// upload or delete, and only PDFs (events/ also allows images) up to 50 MB.
+// Anyone may read (so visitors can read/download); only an admin may upload or
+// delete, and only PDFs (events/ also allows images) up to 50 MB.
 service firebase.storage {
   match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in ['a.khan120701@gmail.com', 'fatwa@duny.us'];
+    }
+
     match /{folder}/{file} {
       allow read: if folder in ['fatawaas', 'articles', 'magazine', 'events'];
-      allow write: if request.auth != null
+      allow write: if isAdmin()
                    && folder in ['fatawaas', 'articles', 'magazine', 'events']
                    && request.resource.size < 50 * 1024 * 1024
                    && (request.resource.contentType == 'application/pdf'
                        || (folder == 'events' && request.resource.contentType.matches('image/.*')));
-      allow delete: if request.auth != null
+      allow delete: if isAdmin()
                     && folder in ['fatawaas', 'articles', 'magazine', 'events'];
     }
   }
