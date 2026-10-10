@@ -13,6 +13,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/pdf-lines.js"></script>
+  <script src="js/docx-lines.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -867,16 +869,16 @@
         </div>
 
         <div class="pdf-drop-zone" id="pdf-drop-zone" onclick="document.getElementById('pdf-file-input').click()">
-          <input type="file" id="pdf-file-input" accept=".pdf" style="display:none;" onchange="handlePdfUpload(this.files[0])" />
+          <input type="file" id="pdf-file-input" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="handleFatwaFile(this.files[0])" />
           <div class="pdf-drop-icon"><i class="fas fa-file-pdf"></i></div>
           <div class="pdf-drop-text">
-            <strong>Import from PDF</strong>
-            <span>Click or drag & drop a fatwa PDF — fields will be auto-filled for review</span>
+            <strong>Import from Word (.docx) or PDF</strong>
+            <span>Click or drag &amp; drop a fatwa — fields will be auto-filled for review. <b>Word (.docx) is recommended</b>: in Google Docs use File → Download → Microsoft Word.</span>
           </div>
-          <div class="pdf-drop-btn">Choose PDF</div>
+          <div class="pdf-drop-btn">Choose File</div>
         </div>
         <div class="pdf-parsing-status" id="pdf-parsing-status" style="display:none;">
-          <span class="pdf-spinner"></span> Parsing PDF…
+          <span class="pdf-spinner"></span> Reading file…
         </div>
 
         <div class="pdf-attach-row" id="pdf-attach-row">
@@ -1723,9 +1725,43 @@
     zone.addEventListener('drop', e => {
       e.preventDefault(); zone.classList.remove('drag-over');
       const file = e.dataTransfer.files[0];
-      if (file && file.type === 'application/pdf') handlePdfUpload(file);
+      if (file) handleFatwaFile(file);
     });
   })();
+
+  // Routes a dropped/chosen file to the right importer.
+  function handleFatwaFile(file) {
+    if (!file) return;
+    const name = (file.name || '').toLowerCase();
+    if (name.endsWith('.docx')) handleDocxUpload(file);
+    else if (name.endsWith('.pdf') || file.type === 'application/pdf') handlePdfUpload(file);
+    else {
+      alert('Please choose a Word (.docx) or PDF file.');
+      document.getElementById('pdf-file-input').value = '';
+    }
+  }
+
+  // Word / Google Doc (downloaded as .docx): the text is stored in reading order with real
+  // letters, so Arabic and Urdu come through exactly as typed.
+  async function handleDocxUpload(file) {
+    const status = document.getElementById('pdf-parsing-status');
+    pendingFatwaPdf = null;     // no PDF to keep when importing from Word
+    showPdfStatus();
+    status.style.display = 'flex';
+    try {
+      if (typeof mammoth === 'undefined') throw new Error('The Word reader failed to load — check your connection and reload.');
+      const arrayBuffer = await file.arrayBuffer();
+      const { value: html } = await mammoth.convertToHtml({ arrayBuffer }, { styleMap: ['u => u'] });
+      const parsed = parseFatwaText(DunyDocxLines.toLines(html));
+      fillFormFromParsed(parsed);
+      openFatwaPreview();
+    } catch (err) {
+      alert('Could not read that Word file. Please fill in the fields manually. ' + err.message);
+    } finally {
+      status.style.display = 'none';
+      document.getElementById('pdf-file-input').value = '';
+    }
+  }
 
   function showPdfStatus(existingUrl) {
     const el = document.getElementById('attach-pdf-status');
