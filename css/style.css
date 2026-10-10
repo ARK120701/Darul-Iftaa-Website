@@ -1707,3 +1707,43 @@ body.lib-is-admin .paper-admin-bar.lib-admin-only { display: block !important; }
 .paper-editor:focus { outline: 2px solid var(--gold-light); }
 .paper-editor h3 { font-size: 1.15rem; margin: 0.8rem 0 0.4rem; }
 .fatwa-answer-body h3 { font-weight: 700; color: var(--navy); margin: 1.6rem 0 0.7rem; }
+
+/* ============================================================
+   IFTĀʾ COURSE SYLLABUS (collapsible periods)
+   ============================================================ */
+.syl-head { text-align: center; margin: 0 0 1.25rem; padding: 1.25rem 1rem; background: var(--parchment); border: 1px solid var(--border); border-radius: var(--radius-lg); font-family: 'Amiri', serif; }
+.syl-title { font-size: 1.7rem; font-weight: 700; color: var(--navy); line-height: 1.5; }
+.syl-school { font-size: 1.2rem; font-weight: 700; color: var(--gold-dark); }
+.syl-supervisor { color: var(--text-muted); font-size: 1rem; }
+.syllabus { display: flex; flex-direction: column; gap: 0.9rem; }
+.syl-item { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--white); overflow: hidden; box-shadow: var(--shadow); transition: border-color 0.2s; }
+.syl-item[open] { border-color: var(--gold); }
+.syl-item summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; }
+.syl-item summary::-webkit-details-marker { display: none; }
+.syl-item summary::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: 0.85rem; color: var(--gold); margin-left: 0.25rem; transition: transform 0.25s; }
+.syl-item[open] summary::after { transform: rotate(180deg); color: var(--gold-light); }
+.syl-item[open] summary { background: linear-gradient(135deg, var(--navy), var(--blue)); }
+.syl-sum-en { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.35; }
+.syl-sum-en strong { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--navy); }
+.syl-sum-en small { color: var(--text-muted); font-size: 0.82rem; }
+.syl-sum-ar { font-family: 'Amiri', serif; font-size: 1.25rem; color: var(--gold-dark); white-space: nowrap; }
+.syl-item[open] .syl-sum-en strong { color: var(--white); }
+.syl-item[open] .syl-sum-en small { color: rgba(255,255,255,0.7); }
+.syl-item[open] .syl-sum-ar { color: var(--gold-light); }
+.syl-badge { display: inline-block; font-family: 'Poppins', sans-serif; font-size: 0.72rem; padding: 0 0.6rem; border-radius: 999px; background: var(--gold); color: var(--white); vertical-align: middle; margin-right: 0.35rem; }
+.syl-body { padding: 1.25rem; font-family: 'Amiri', serif; font-size: 1.1rem; line-height: 1.9; color: var(--text-dark); }
+.syl-until { text-align: center; color: var(--gold-dark); font-weight: 700; margin-bottom: 0.75rem; }
+.syl-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+.syl-body table { width: 100%; border-collapse: collapse; min-width: 640px; background: var(--white); }
+.syl-body th, .syl-body td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: right; vertical-align: middle; }
+.syl-body thead th { background: var(--navy); color: var(--gold-light); text-align: center; font-weight: 700; }
+.syl-body tr.syl-sec th { background: var(--gold-pale); color: var(--gold-dark); text-align: center; letter-spacing: 0.04em; }
+.syl-body td.subject { font-weight: 700; color: var(--navy); background: var(--parchment); width: 20%; }
+.syl-body td.how { text-align: center; color: var(--text-muted); width: 17%; }
+.syl-body td.dash { text-align: center; color: var(--text-muted); }
+.syl-body tr.syl-exercise td { background: var(--gold-pale); font-weight: 700; color: var(--navy); }
+.syl-body tr.syl-exercise td.how { color: var(--gold-dark); }
+@media (max-width: 560px) {
+  .syl-item summary { padding: 0.85rem 1rem; gap: 0.6rem; }
+  .syl-sum-ar { font-size: 1.05rem; white-space: normal; text-align: right; }
+}
