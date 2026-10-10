@@ -1860,11 +1860,21 @@
         // gap = distance down from the previous line; the parser uses it to tell a
         // wrapped line (normal spacing) from a real paragraph break (bigger gap).
         let prevY = null;
+        const pageStart = lineObjs.length;
         for (const line of DunyPdfLines.build(records)) {
           if (line.letterhead) { prevY = null; continue; }
           lineObjs.push({ text: line.text, size: line.size, runs: line.runs, arabic: line.arabic,
-                          gap: prevY === null ? null : prevY - line.y });
+                          gap: prevY === null ? null : prevY - line.y,
+                          xMin: line.xMin, xMax: line.xMax,
+                          allBold: line.runs.length > 0 && line.runs.every(r => r.bold || !r.str.trim()) });
           prevY = line.y;
+        }
+        // An Arabic/Urdu line that ran right to the left edge of the text column was
+        // wrapped by the PDF (a short line is a finished citation, not a wrap).
+        const pageLines = lineObjs.slice(pageStart);
+        if (pageLines.length) {
+          const minX = Math.min(...pageLines.map(l => l.xMin)), maxX = Math.max(...pageLines.map(l => l.xMax));
+          pageLines.forEach(l => { l.full = l.xMin <= minX + 0.12 * (maxX - minX); });
         }
         lineObjs.push({ text: '', size: 0, runs: [] });
       }
@@ -1964,12 +1974,16 @@
     let lastBody = null;
     function pushBody(parts, html, lineObj, sec, wasBody) {
       const gapOk = lineObj.gap != null && lineObj.gap > 0 && lineObj.gap <= 1.5 * Math.max(lineObj.size || 12, 1);
-      if (wasBody && wasBody.sec === sec && gapOk && !lineObj.arabic && !wasBody.arabic && parts.length) {
+      const rtl = lineObj.arabic || (wasBody && wasBody.arabic);
+      // English lines join on spacing alone; Arabic/Urdu lines must also have wrapped
+      // at the column edge, and a fully bold line is a citation heading, never a wrap.
+      const joinOk = !rtl || (wasBody && wasBody.full && !lineObj.allBold);
+      if (wasBody && wasBody.sec === sec && gapOk && joinOk && parts.length) {
         parts[parts.length - 1] += ' ' + html;
       } else {
         parts.push(html);
       }
-      lastBody = { sec, arabic: !!lineObj.arabic };
+      lastBody = { sec, arabic: !!lineObj.arabic, full: !!lineObj.full };
     }
     let writtenByPending = false;
     let answerHeadingPending = false;
@@ -2015,7 +2029,7 @@
       const html = runsToHtml(lineObj.runs);
       if (section === 'question') pushBody(qParts, html, lineObj, 'question', wasBody);
       else if (section === 'answer') pushBody(aParts, html, lineObj, 'answer', wasBody);
-      else if (section === 'refs') rParts.push(html);
+      else if (section === 'refs') pushBody(rParts, html, lineObj, 'refs', wasBody);
       // 'approvers' and 'closing' lines (the fixed muftis, "Student, ..." leftovers) are dropped
     }
 

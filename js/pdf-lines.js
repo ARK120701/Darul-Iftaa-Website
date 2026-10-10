@@ -131,6 +131,8 @@
         text: runs.map(r => r.str).join(''),
         size: Math.max(0, ...line.map(it => it.size || 0)),
         y: line[0].y,
+        xMin: Math.min(...line.map(it => it.x)),
+        xMax: Math.max(...line.map(it => it.x + (it.w || 0))),
         arabic: AR_RE.test(joined),
         runs,
         letterhead: line.some(it => it.letterhead)
