@@ -1721,23 +1721,3 @@ body.lib-is-admin .paper-admin-bar.lib-admin-only { display: block !important; }
 .photo-hero p.arabic { color: #fff; }
 .photo-hero h1 { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.85), 0 3px 22px rgba(0,0,0,.75); }
 .photo-hero .breadcrumb, .photo-hero .breadcrumb a, .photo-hero .breadcrumb span { color: #fff; font-weight: 600; }
-
-/* Photo hero: small neutral dark pills behind the subtitle and breadcrumb (not a tint over
-   the picture) so the text stays readable on any part of the photo. */
-.photo-hero p:not(.arabic) {
-  display: inline-block;
-  background: rgba(0, 0, 0, 0.62);
-  color: #fff;
-  font-weight: 500;
-  padding: 0.5rem 1.1rem;
-  border-radius: 10px;
-  text-shadow: none;
-}
-.photo-hero .breadcrumb {
-  display: inline-flex;
-  background: rgba(0, 0, 0, 0.55);
-  padding: 0.3rem 0.9rem;
-  border-radius: 999px;
-  text-shadow: none;
-}
-.photo-hero .container { text-align: center; }
