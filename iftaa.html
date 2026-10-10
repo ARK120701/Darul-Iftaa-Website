@@ -869,11 +869,11 @@
         </div>
 
         <div class="pdf-drop-zone" id="pdf-drop-zone" onclick="document.getElementById('pdf-file-input').click()">
-          <input type="file" id="pdf-file-input" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="handleFatwaFile(this.files[0])" />
+          <input type="file" id="pdf-file-input" accept=".docx,.doc,.txt,.pdf,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="handleFatwaFile(this.files[0])" />
           <div class="pdf-drop-icon"><i class="fas fa-file-pdf"></i></div>
           <div class="pdf-drop-text">
-            <strong>Import from Word (.docx) or PDF</strong>
-            <span>Click or drag &amp; drop a fatwa — fields will be auto-filled for review. <b>Word (.docx) is recommended</b>: in Google Docs use File → Download → Microsoft Word.</span>
+            <strong>Import from Word, text or PDF</strong>
+            <span>Click or drag &amp; drop a fatwa — fields will be auto-filled for review. <b>Word (.docx) is recommended</b>: in Google Docs use File → Download → Microsoft Word. Plain .txt (UTF-8) and PDF also work.</span>
           </div>
           <div class="pdf-drop-btn">Choose File</div>
         </div>
@@ -1734,9 +1734,44 @@
     if (!file) return;
     const name = (file.name || '').toLowerCase();
     if (name.endsWith('.docx')) handleDocxUpload(file);
+    else if (name.endsWith('.txt') || file.type === 'text/plain') handleTxtUpload(file);
     else if (name.endsWith('.pdf') || file.type === 'application/pdf') handlePdfUpload(file);
-    else {
-      alert('Please choose a Word (.docx) or PDF file.');
+    else if (name.endsWith('.doc')) {
+      alert('Old-format Word files (.doc) cannot be read reliably in the browser. Open it in Word or Google Docs, save or download it as .docx (or .txt), then import that file.');
+      document.getElementById('pdf-file-input').value = '';
+    } else {
+      alert('Please choose a Word (.docx), text (.txt) or PDF file.');
+      document.getElementById('pdf-file-input').value = '';
+    }
+  }
+
+  // Plain text: one line per line. Without font sizes, the first line (when it is not
+  // itself a "Question:" / "Answer:" label) is treated as the title.
+  async function handleTxtUpload(file) {
+    const status = document.getElementById('pdf-parsing-status');
+    pendingFatwaPdf = null;
+    showPdfStatus();
+    status.style.display = 'flex';
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let enc = 'utf-8';
+      if (buf[0] === 0xFF && buf[1] === 0xFE) enc = 'utf-16le';      // Notepad "Unicode"
+      else if (buf[0] === 0xFE && buf[1] === 0xFF) enc = 'utf-16be';
+      const text = new TextDecoder(enc).decode(buf).replace(/^\uFEFF/, '');
+      const LABEL_RE = /^\s*(question|answer|written\s*by|references?)\b/i;
+      let titleDone = false;
+      const lineObjs = text.split(/\r\n|\n|\r/).map(raw => {
+        const t = raw.replace(/\s+$/, '');
+        let size = 12;
+        if (!titleDone && t.trim()) { titleDone = true; if (!LABEL_RE.test(t)) size = 24; }
+        return { text: t, size, runs: t ? [{ str: t, bold: false, underline: false }] : [] };
+      });
+      fillFormFromParsed(parseFatwaText(lineObjs));
+      openFatwaPreview();
+    } catch (err) {
+      alert('Could not read that text file. Please fill in the fields manually. ' + err.message);
+    } finally {
+      status.style.display = 'none';
       document.getElementById('pdf-file-input').value = '';
     }
   }
