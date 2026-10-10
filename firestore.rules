@@ -6,22 +6,28 @@ service cloud.firestore {
     // Only these two accounts count as admins. To add or remove an admin, edit this
     // list, publish the rules, and add/delete the user under Authentication > Users.
     function isAdmin() {
-      return request.auth != null
-        && request.auth.token.email in ['a.khan120701@gmail.com', 'fatwa@duny.us'];
+      return request.auth != null && request.auth.token.email in ['a.khan120701@gmail.com', 'fatwa@duny.us'];
     }
 
-    // Fatwas are publicly readable (the Iftaa page loads them for every visitor),
-    // but only an admin may create/update/delete them.
-    match /fatwas/{fatwaId} {
+    // Everything below is publicly readable; only an admin may create/update/delete.
+    match /fatwas/{id} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Research papers, monthly magazine issues and events: publicly readable,
-    // writable only by an admin.
-    match /{coll}/{docId} {
-      allow read: if coll in ['articles', 'magazine', 'events'];
-      allow write: if isAdmin() && coll in ['articles', 'magazine', 'events'];
+    match /articles/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /magazine/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /events/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // Deny everything else by default.
