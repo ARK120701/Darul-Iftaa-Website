@@ -449,7 +449,7 @@
       <div class="results-bar">
         <p class="results-count">Showing <strong id="result-count">0</strong> fatwa(s)</p>
         <select class="sort-select" id="sort-select">
-          <option value="newest">Newest First</option>
+          <option value="newest">Recently Added First</option>
           <option value="oldest">Oldest First</option>
           <option value="az">A–Z</option>
         </select>
@@ -639,8 +639,12 @@
     rebuildSerialMap();
     let list = allFatwas.filter(f => !isHidden(f.slug));
 
-    if (sortOrder === 'newest') list.sort((a,b) => new Date(b.date) - new Date(a.date));
-    else if (sortOrder === 'oldest') list.sort((a,b) => new Date(a.date) - new Date(b.date));
+    // "Newest" = most recently added to the site (so a new upload always lands first,
+    // top-left), whatever date is written on the fatwa itself.
+    const addedOrder = (a, b) => ((b.added || 0) - (a.added || 0)) ||
+      ((parseInt(b.id) || 0) - (parseInt(a.id) || 0)) || (new Date(b.date) - new Date(a.date));
+    if (sortOrder === 'newest') list.sort(addedOrder);
+    else if (sortOrder === 'oldest') list.sort((a,b) => addedOrder(b, a));
     else list.sort((a,b) => a.title.localeCompare(b.title));
 
     if (activeCategory !== 'all')
@@ -1497,7 +1501,7 @@
         if (isLocalFatwa(editSlug)) {
           const arr = getLocal();
           const idx = arr.findIndex(f => f.slug === editSlug);
-          if (idx >= 0) { updated.id = arr[idx].id; arr[idx] = updated; }
+          if (idx >= 0) { updated.id = arr[idx].id; if (arr[idx].added) updated.added = arr[idx].added; arr[idx] = updated; }
           else arr.unshift(updated);
           saveLocal(arr);
           fbSaveFatwa(updated);
@@ -1514,7 +1518,7 @@
         const slug = toSlug(title) || 'fatwa-' + newId;
         const fatwa = { id: newId, slug, title, arabic_title: arabic, question, answer,
           mufti: 'Darul Iftaa New York', written_by: student,
-          date, category, keywords: [...admKeywords], references, madhab };
+          date, category, keywords: [...admKeywords], references, madhab, added: Date.now() };
         if (pdfInfo) Object.assign(fatwa, pdfInfo);
         saveLocal([fatwa, ...existing]);
         fbSaveFatwa(fatwa);
