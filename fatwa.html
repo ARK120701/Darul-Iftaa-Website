@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fatwa — Darul Iftaa New York</title>
-  <meta name="description" content="Read a Fatwa (Islamic legal ruling) issued by the muftis of Darul Iftaa New York." />
+  <title>Fatwā — Darul Iftaa New York</title>
+  <meta name="description" content="Read a Fatwā (Islamic legal ruling) issued by the muftīs of Darul Iftaa New York." />
   <link rel="stylesheet" href="css/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,6 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/fatwa-data.js"></script>
   <script src="js/bidi.js"></script>
+  <script src="js/labels.js"></script>
   <style>
     .fatwa-detail-section { padding: 3rem 0 5rem; }
     .fatwa-detail-card {
@@ -133,8 +134,8 @@
         <li><a href="about.html">About Us</a></li>
         <li><a href="faculty.html">Faculty</a></li>
         <li><a href="services.html">Services</a></li>
-        <li><a href="iftaa-course.html">Iftaa Course</a></li>
-        <li><a href="iftaa.html" class="active">Fataawas</a></li>
+        <li><a href="iftaa-course.html">Iftāʾ Course</a></li>
+        <li><a href="iftaa.html" class="active">Fatāwā</a></li>
         <li class="nav-dropdown">
           <a href="articles.html">Resources <i class="fas fa-chevron-down nav-caret"></i></a>
           <div class="nav-dropdown-menu">
@@ -152,8 +153,8 @@
       <a href="about.html">About Us</a>
       <a href="faculty.html">Faculty</a>
       <a href="services.html">Services</a>
-      <a href="iftaa-course.html">Iftaa Course</a>
-      <a href="iftaa.html" class="active">Fataawas</a>
+      <a href="iftaa-course.html">Iftāʾ Course</a>
+      <a href="iftaa.html" class="active">Fatāwā</a>
       <a href="articles.html">Research Papers</a>
       <a href="magazine.html">Monthly Magazine</a>
       <a href="events.html">Events</a>
@@ -163,11 +164,11 @@
 
   <section class="fatwa-detail-section">
     <div class="container">
-      <a href="iftaa.html" class="fatwa-back-link"><i class="fas fa-arrow-left"></i> Back to Fataawas</a>
+      <a href="iftaa.html" class="fatwa-back-link"><i class="fas fa-arrow-left"></i> Back to Fatāwā</a>
       <div class="fatwa-detail-card" id="fatwa-detail">
         <div class="fatwa-not-found">
           <i class="fas fa-circle-notch fa-spin"></i>
-          <p>Loading fatwa&hellip;</p>
+          <p>Loading fatwā&hellip;</p>
         </div>
       </div>
 
@@ -191,7 +192,7 @@
           </div>
           <h3>Darul Iftaa New York</h3>
           <p class="tagline">Dept. of Darul Uloom New York</p>
-          <p>Providing free, confidential, and authentic Islamic legal rulings to the Muslim community of New York, rooted in the Quran and Sunnah.</p>
+          <p>Providing free, confidential, and authentic Islamic legal rulings to the Muslim community of New York, rooted in the Qurʾān and Sunnah.</p>
           <div class="social-links">
             <a href="#" class="social-link"><i class="fab fa-facebook-f"></i></a>
             <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
@@ -206,8 +207,8 @@
             <li><a href="about.html"><i class="fas fa-chevron-right"></i> About Us</a></li>
             <li><a href="faculty.html"><i class="fas fa-chevron-right"></i> Faculty</a></li>
             <li><a href="services.html"><i class="fas fa-chevron-right"></i> Services</a></li>
-            <li><a href="iftaa-course.html"><i class="fas fa-chevron-right"></i> Iftaa Course</a></li>
-            <li><a href="iftaa.html"><i class="fas fa-chevron-right"></i> Fataawas</a></li>
+            <li><a href="iftaa-course.html"><i class="fas fa-chevron-right"></i> Iftāʾ Course</a></li>
+            <li><a href="iftaa.html"><i class="fas fa-chevron-right"></i> Fatāwā</a></li>
             <li><a href="articles.html"><i class="fas fa-chevron-right"></i> Research Papers</a></li>
             <li><a href="magazine.html"><i class="fas fa-chevron-right"></i> Monthly Magazine</a></li>
             <li><a href="events.html"><i class="fas fa-chevron-right"></i> Events</a></li>
@@ -258,9 +259,9 @@
     document.getElementById('fatwa-detail').innerHTML = `
       <div class="fatwa-not-found">
         <i class="fas fa-scroll"></i>
-        <h2 style="margin-bottom:.5rem;">Fatwa not found</h2>
-        <p style="color:var(--text-muted);margin-bottom:1.5rem;">This fatwa may have been moved or removed.</p>
-        <a href="iftaa.html" class="btn btn-navy"><i class="fas fa-arrow-left"></i> Browse Fataawas</a>
+        <h2 style="margin-bottom:.5rem;">Fatwā not found</h2>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;">This fatwā may have been moved or removed.</p>
+        <a href="iftaa.html" class="btn btn-navy"><i class="fas fa-arrow-left"></i> Browse Fatāwā</a>
       </div>`;
     document.getElementById('fatwa-serial-line').style.display = 'none';
     document.getElementById('fatwa-pager').style.display = 'none';
@@ -270,7 +271,7 @@
   function renderPager(ordered, index) {
     const total = ordered.length;
     document.getElementById('fatwa-serial-line').innerHTML =
-      `Fatwa <span>No. ${index + 1}</span> of <span>${total}</span>`;
+      `Fatwā <span>No. ${index + 1}</span> of <span>${total}</span>`;
     document.getElementById('fatwa-serial-line').style.display = 'block';
 
     const prev = index > 0 ? ordered[index - 1] : null;
@@ -289,7 +290,7 @@
     }
 
     document.getElementById('fatwa-pager').innerHTML =
-      side(prev, 'Previous Fatwa', 'prev') + side(next, 'Next Fatwa', 'next');
+      side(prev, 'Previous Fatwā', 'prev') + side(next, 'Next Fatwā', 'next');
     document.getElementById('fatwa-pager').style.display = 'grid';
   }
 
@@ -338,7 +339,7 @@
 
         <div class="fatwa-meta-footer">
           <span class="fatwa-detail-date">${formatDate(f.date)}</span>
-          <span class="fatwa-cat-badge ${cls}"><i class="fas fa-scale-balanced"></i> ${esc(f.category)}</span>
+          <span class="fatwa-cat-badge ${cls}"><i class="fas fa-scale-balanced"></i> ${esc(catLabel(f.category))}</span>
         </div>
 
         ${f.pdf_url ? `<div class="lib-actions" style="margin-bottom:1rem;">
@@ -347,7 +348,7 @@
         </div>` : ''}
 
         <div class="fatwa-share">
-          <a href="iftaa.html"><i class="fas fa-arrow-left"></i> Back to Fataawas</a>
+          <a href="iftaa.html"><i class="fas fa-arrow-left"></i> Back to Fatāwā</a>
         </div>
       </div>`;
   }

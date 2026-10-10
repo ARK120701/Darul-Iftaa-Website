@@ -36,7 +36,7 @@
     // Source PDFs attached to fatwas (stored on the fatwa document itself; no list page).
     fatawaas: {
       collection: 'fatwas', folder: 'fatawaas', pdf: 'required',
-      singular: 'Fatwa', plural: 'Fataawas', fields: [],
+      singular: 'Fatwā', plural: 'Fatāwā', fields: [],
       sort: () => 0,
       meta: d => fmtDate(d.date)
     },
@@ -421,7 +421,7 @@
     const meta = KINDS[kind].meta ? KINDS[kind].meta(item) : '';
     const backHref = kind === 'articles' ? 'articles.html' : kind === 'fatawaas' ? 'fatwa.html?slug=' + encodeURIComponent(item.slug || id) : 'magazine.html';
     head.innerHTML = `
-      <a class="fatwa-back-link" href="${backHref}"><i class="fas fa-arrow-left"></i> ${kind === 'fatawaas' ? 'Back to the Fatwa' : 'Back to ' + esc(KINDS[kind].plural)}</a>
+      <a class="fatwa-back-link" href="${backHref}"><i class="fas fa-arrow-left"></i> ${kind === 'fatawaas' ? 'Back to the Fatwā' : 'Back to ' + esc(KINDS[kind].plural)}</a>
       <h1>${esc(item.title)}</h1>
       ${meta ? `<p class="lib-meta">${esc(meta)}</p>` : ''}
       <div class="lib-actions">
