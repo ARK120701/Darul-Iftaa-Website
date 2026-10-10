@@ -13,6 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="js/firebase-config.js"></script>
   <script src="js/pdf-lines.js"></script>
+  <script src="js/bidi.js"></script>
   <script src="js/docx-lines.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -621,8 +622,8 @@
             </span>
             ${num ? `<span class="fatwa-serial-badge">No. ${num}</span>` : ''}
           </div>
-          <h3>${f.title}</h3>
-          <p class="fatwa-excerpt">${excerpt}</p>
+          <h3 dir="auto">${f.title}</h3>
+          <p class="fatwa-excerpt" dir="auto">${excerpt}</p>
         </div>
         <div class="fatwa-card-footer">
           <div class="fatwa-meta-row">
@@ -1230,7 +1231,7 @@
   .fp-preview-card .fatwa-answer-body u { text-decoration: underline; }
   .fp-preview-card .fp-refs-heading { font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #888; margin: 1.75rem 0 0.85rem; padding-top: 1.5rem; border-top: 2px solid #eee; }
   .fp-preview-card .fp-refs-heading i { color: var(--gold); margin-right: 0.4rem; }
-  .fp-preview-card .fp-refs-body { font-family: 'Amiri',serif; font-size: 1.15rem; line-height: 2; color: #1a1a1a; white-space: pre-wrap; direction: auto; }
+  .fp-preview-card .fp-refs-body { font-family: 'Amiri',serif; font-size: 1.15rem; line-height: 2; color: #1a1a1a; }
   .fp-preview-card .fatwa-closing { margin-top: 2.5rem; border-top: 2px solid #eee; padding-top: 2rem; }
   .fp-preview-card .allah-knows-best { font-family: 'Playfair Display',serif; font-size: 1.1rem; font-style: italic; color: var(--navy); margin-bottom: 1.75rem; display: flex; align-items: center; gap: 0.6rem; }
   .fp-preview-card .allah-knows-best::before { content:''; display:inline-block; width:4px; height:1.2em; background:var(--gold); border-radius:2px; flex-shrink:0; }
@@ -2076,7 +2077,7 @@
 
     const refsBlock = refsHtml.replace(/<[^>]+>/g,'').trim() ? `
       <h4 class="fp-refs-heading"><i class="fas fa-book-open"></i> References</h4>
-      <div class="fp-refs-body">${refsHtml}</div>` : '';
+      <div class="fp-refs-body">${DunyBidi.wrap(refsHtml)}</div>` : '';
 
     document.getElementById('fp-preview-card').innerHTML = `
       <span class="fatwa-cat-badge ${cls}"><i class="fas fa-scale-balanced"></i> ${esc(category)}</span>
@@ -2085,12 +2086,12 @@
 
       <div class="fatwa-question-box">
         <span class="question-label"><i class="fas fa-question-circle"></i> The Question</span>
-        <div class="fatwa-question-text">${question || '<em>No question entered</em>'}</div>
+        <div class="fatwa-question-text">${DunyBidi.wrap(question) || '<em>No question entered</em>'}</div>
       </div>
 
       <span class="answer-label"><i class="fas fa-check-circle"></i> The Answer</span>
       <p style="text-align:center;direction:rtl;color:var(--gold-dark);font-weight:700;margin:0 0 1.5rem;">الجواب بملهم الصدق و الصواب</p>
-      <div class="fatwa-answer-body">${answer || '<em style="color:#aaa">No answer entered</em>'}</div>
+      <div class="fatwa-answer-body">${DunyBidi.wrap(answer) || '<em style="color:#aaa">No answer entered</em>'}</div>
 
       ${refsBlock}
 

@@ -14,6 +14,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="js/fatwa-data.js"></script>
+  <script src="js/bidi.js"></script>
   <style>
     .fatwa-detail-section { padding: 3rem 0 5rem; }
     .fatwa-detail-card {
@@ -58,7 +59,7 @@
     .fatwa-answer-body u { text-decoration: underline; }
     .refs-heading { font-size: .88rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #888; margin: 1.75rem 0 .85rem; padding-top: 1.5rem; border-top: 2px solid #eee; }
     .refs-heading i { color: var(--gold); margin-right: .4rem; }
-    .refs-body { font-family: 'Amiri', serif; font-size: 1.15rem; line-height: 2; color: #1a1a1a; white-space: pre-wrap; direction: auto; }
+    .refs-body { font-family: 'Amiri', serif; font-size: 1.15rem; line-height: 2; color: #1a1a1a; }
 
     .fatwa-closing { margin-top: 2.5rem; border-top: 2px solid #eee; padding-top: 2rem; }
     .allah-knows-best { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-style: italic; color: var(--navy); margin-bottom: 1.75rem; display: flex; align-items: center; gap: .6rem; }
@@ -298,19 +299,19 @@
     const refsHtml = (f.references || '').toString().trim();
     const refsBlock = refsHtml.replace(/<[^>]+>/g,'').trim() ? `
       <h4 class="refs-heading"><i class="fas fa-book-open"></i> References</h4>
-      <div class="refs-body">${refsHtml}</div>` : '';
+      <div class="refs-body">${DunyBidi.wrap(refsHtml)}</div>` : '';
 
     document.getElementById('fatwa-detail').innerHTML = `
       <h1 class="fatwa-detail-title">${esc(f.title)}</h1>
 
       <div class="fatwa-question-box">
         <span class="question-label"><i class="fas fa-question-circle"></i> The Question</span>
-        <div class="fatwa-question-text">${f.question || '<em>No question recorded.</em>'}</div>
+        <div class="fatwa-question-text">${DunyBidi.wrap(f.question) || '<em>No question recorded.</em>'}</div>
       </div>
 
       <span class="answer-label"><i class="fas fa-check-circle"></i> The Answer</span>
       <p class="fatwa-answer-arabic">الجواب بملهم الصدق و الصواب</p>
-      <div class="fatwa-answer-body">${f.answer || '<em>No answer recorded.</em>'}</div>
+      <div class="fatwa-answer-body">${DunyBidi.wrap(f.answer) || '<em>No answer recorded.</em>'}</div>
 
       <div class="fatwa-closing">
         <p class="allah-knows-best">And Allah ﷻ knows best.</p>
