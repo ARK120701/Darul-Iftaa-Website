@@ -878,7 +878,7 @@
           <span class="pdf-spinner"></span> Parsing PDF…
         </div>
 
-        <div class="pdf-attach-row">
+        <div class="pdf-attach-row" id="pdf-attach-row">
           <label for="attach-pdf-input"><i class="fas fa-paperclip"></i> Attach or replace the PDF only (doesn't change the text)</label>
           <input type="file" id="attach-pdf-input" accept=".pdf,application/pdf" onchange="attachPdfOnly(this.files[0])" />
           <div class="pdf-attach-status" id="attach-pdf-status"></div>
@@ -1474,7 +1474,7 @@
 
       // Keep the original PDF: upload it to the fatawaas/ folder in Firebase Storage.
       let pdfInfo = null;
-      if (pendingFatwaPdf && storage && auth && auth.currentUser) {
+      if (STORAGE_ON && pendingFatwaPdf && storage && auth && auth.currentUser) {
         try {
           const path = 'fatawaas/' + Date.now() + '-' + pendingFatwaPdf.name.toLowerCase().replace(/[^a-z0-9.]+/g, '-');
           const snap = await storage.ref(path).put(pendingFatwaPdf, { contentType: 'application/pdf' });
@@ -1624,6 +1624,8 @@
   let db = null;
   let auth = null;
   var storage = null;
+  // Original-PDF storage needs the Blaze plan; see STORAGE_ENABLED in js/firebase-config.js.
+  var STORAGE_ON = typeof STORAGE_ENABLED === 'undefined' || STORAGE_ENABLED;
   var pendingFatwaPdf = null; // PDF imported in the admin form; uploaded to fatawaas/ on save
   let pendingAdminHash = window.location.hash === '#admin';
   if (pendingAdminHash) history.replaceState(null, '', window.location.pathname + window.location.search);
@@ -1727,10 +1729,12 @@
   function showPdfStatus(existingUrl) {
     const el = document.getElementById('attach-pdf-status');
     if (!el) return;
+    if (!STORAGE_ON) { el.textContent = ''; return; }
     if (pendingFatwaPdf) el.innerHTML = '<i class="fas fa-file-pdf" style="color:#e53e3e"></i> Will upload on save: ' + esc(pendingFatwaPdf.name);
     else if (existingUrl) el.innerHTML = '<i class="fas fa-check-circle" style="color:#27ae60"></i> A PDF is already attached to this fatwa.';
     else el.textContent = '';
   }
+  if (!STORAGE_ON) { const r = document.getElementById('pdf-attach-row'); if (r) r.style.display = 'none'; }
   function attachPdfOnly(file) {
     if (!file) return;
     if (file.type !== 'application/pdf') { alert('Please choose a PDF file.'); return; }

@@ -1676,3 +1676,6 @@ body.lib-is-admin .lib-toolbar .btn.lib-admin-only { display: inline-flex !impor
   .lib-card, .lib-event { flex-direction: column; }
   .lib-date { width: 100%; flex-direction: row; gap: 0.6rem; justify-content: center; align-items: baseline; }
 }
+
+.lib-hint { font-size: 0.8rem; color: var(--text-muted); margin: -0.5rem 0 1rem; line-height: 1.5; }
+.lib-hint code { background: var(--parchment); padding: 0 0.3rem; border-radius: 4px; }

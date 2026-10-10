@@ -24,3 +24,15 @@ const FIREBASE_CONFIG = {
   appId: "1:535860811822:web:9ed4421a106fbd00dce7bf",
   measurementId: "G-S1J3HN493C"
 };
+
+/*
+  PDF file storage (Firebase Storage) needs the paid Blaze plan. While this is
+  false the site stays on the free Spark plan:
+    - fatwas are saved as text only (no original-PDF buttons),
+    - Research Papers / Magazine / Events entries point at a PDF kept in this
+      GitHub repo (uploads/articles/, uploads/magazine/, uploads/events/) or at
+      any PDF link, entered in the admin form instead of uploading a file.
+  Set to true after upgrading and creating the Storage bucket to turn file
+  uploads back on.
+*/
+const STORAGE_ENABLED = false;

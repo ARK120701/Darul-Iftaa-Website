@@ -54,6 +54,9 @@
     }
   };
 
+  // Firebase Storage is optional (Blaze plan). Without it the admin form takes a PDF path/link.
+  const STORAGE_ON = typeof STORAGE_ENABLED === 'undefined' || STORAGE_ENABLED;
+
   /* ---------- helpers ---------- */
   function esc(s) {
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -221,12 +224,18 @@
       ? 'PDF file' + (isEdit ? ' (leave empty to keep the current one)' : ' *')
       : 'Flyer (PDF or image, optional)';
     const accept = cfg.pdf === 'required' ? 'application/pdf' : 'application/pdf,image/*';
+    const linkLabel = (cfg.pdf === 'required' ? 'PDF path or link *' : 'Flyer path or link (optional)');
+    const linkHint = 'Add the file to the GitHub repo in <code>uploads/' + cfg.folder + '/</code> and enter its path, e.g. <code>uploads/' + cfg.folder + '/my-file.pdf</code> — or paste a full link.';
+    const fileHtml = STORAGE_ON
+      ? `<label>${pdfLabel}<input type="file" name="file" accept="${accept}" /></label>`
+      : `<label>${linkLabel}<input type="text" name="pdfLink" value="${esc(existing ? existing.pdfUrl : '')}"${cfg.pdf === 'required' ? ' required' : ''} /></label>
+         <p class="lib-hint">${linkHint}</p>`;
     const ov = modal(`
       <button class="lib-x" type="button" aria-label="Close">&times;</button>
       <h3>${isEdit ? 'Edit' : 'Add'} ${esc(cfg.singular)}</h3>
       <form>
         ${fieldHtml}
-        <label>${pdfLabel}<input type="file" name="file" accept="${accept}" /></label>
+        ${fileHtml}
         <div class="lib-progress" hidden><span></span></div>
         <p class="lib-err" hidden></p>
         <button class="btn btn-gold" type="submit">${isEdit ? 'Save Changes' : 'Upload'}</button>
@@ -238,14 +247,18 @@
     form.addEventListener('submit', async e => {
       e.preventDefault();
       err.hidden = true;
-      const file = form.file.files[0];
-      if (cfg.pdf === 'required' && !isEdit && !file) { err.textContent = 'Please choose a PDF.'; err.hidden = false; return; }
+      const file = STORAGE_ON ? form.file.files[0] : null;
+      if (cfg.pdf === 'required' && STORAGE_ON && !isEdit && !file) { err.textContent = 'Please choose a PDF.'; err.hidden = false; return; }
       if (file && file.size > 50 * 1024 * 1024) { err.textContent = 'File is larger than 50 MB.'; err.hidden = false; return; }
       const btn = form.querySelector('button[type=submit]');
       btn.disabled = true;
       try {
         const data = {};
         cfg.fields.forEach(f => { data[f.key] = form[f.key].value.trim(); });
+        if (!STORAGE_ON) {
+          const link = form.pdfLink.value.trim();
+          if (link) { data.pdfUrl = link; data.storagePath = ''; data.fileType = /\.(png|jpe?g|webp|gif)$/i.test(link) ? 'image' : 'application/pdf'; }
+        }
         if (file) {
           bar.hidden = false;
           const up = await uploadPdf(file, cfg.folder, p => { bar.firstElementChild.style.width = Math.round(p * 100) + '%'; });
@@ -448,5 +461,5 @@
     }
   }
 
-  window.DunyLib = { mountList, mountReader, downloadFile, init, fmtDate };
+  window.DunyLib = { STORAGE_ON, mountList, mountReader, downloadFile, init, fmtDate };
 })(window);
