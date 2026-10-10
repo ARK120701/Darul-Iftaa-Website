@@ -346,10 +346,10 @@ p  { margin-bottom: 1rem; }
   position: absolute;
   inset: 0;
   background-color: var(--navy);
-  background-image: linear-gradient(135deg, rgba(12,31,61,.87) 0%, rgba(17,41,82,.82) 50%, rgba(26,75,140,.78) 100%), url('../FrontHomePagePic.webp');
-  background-repeat: no-repeat, no-repeat;
-  background-position: center, center;
-  background-size: cover, contain;
+  background-image: url('../FrontHomePagePic.webp');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
   z-index: 0;
 }
 .hero-pattern {
@@ -1707,3 +1707,10 @@ body.lib-is-admin .paper-admin-bar.lib-admin-only { display: block !important; }
 .paper-editor:focus { outline: 2px solid var(--gold-light); }
 .paper-editor h3 { font-size: 1.15rem; margin: 0.8rem 0 0.4rem; }
 .fatwa-answer-body h3 { font-weight: 700; color: var(--navy); margin: 1.6rem 0 0.7rem; }
+
+/* White text over the unfiltered hero photos: a soft dark halo keeps it readable. */
+.hero-content h1, .hero-content p, .hero-badge,
+.page-hero h1, .page-hero p, .page-hero .arabic, .page-hero .breadcrumb {
+  text-shadow: 0 1px 3px rgba(0,0,0,.75), 0 2px 18px rgba(0,0,0,.65);
+}
+.hero-content .btn, .page-hero .btn { text-shadow: none; }
