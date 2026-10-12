@@ -1020,7 +1020,8 @@ p  { margin-bottom: 1rem; }
   position: relative;
   z-index: 1;
 }
-.faculty-info { padding: 1.5rem; }
+.faculty-card { border-top: 4px solid var(--gold); }
+.faculty-info { padding: 2rem 1.5rem; }
 .faculty-info h3 { font-size: 1.15rem; margin-bottom: 0.2rem; }
 .faculty-title {
   color: var(--gold-dark);
@@ -1537,7 +1538,7 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   z-index: 1;
 }
 .faculty-bio-card-info {
-  padding: 0 1.5rem 2rem;
+  padding: 2rem 1.5rem;
   position: relative;
   z-index: 1;
 }
