@@ -104,12 +104,14 @@
     var FACULTY = [
  {
   "id": "mizaanur-rahman",
+  "initials": "MR",
   "name": "Muftī Mizanur Rahman Sayed",
   "title": "Head Muftī",
   "bio": ["Muftī Mizanur Rahman Sayed is a Bangladeshi Islamic scholar and jurist. He was one of five scholars selected by the Islamic Foundation Bangladesh to serve as fatwa interpreters, a recognition of his standing in Islamic jurisprudence.", "He began his studies at Al-Jamiah Al-Ashrafiyyah in Fulgazi, Feni District, and continued at Al-Jamiah Al-Islamiah Patiya and Al-Jamiatul Ahlia Darul Ulum Moinul Islam for his secondary education. He then travelled to Darul Uloom Karachi for higher studies, where he completed Dawrah Ḥadīth and specialized in Islamic law and fiqh. He also earned a diploma in Arabic literature from Imām Muḥammad ibn Saʿūd Islamic University in Riyadh.", "Muftī Mizanur Rahman is the founding principal of Farukia Islamia Madrasah in Feni. On 26 January 2012 he established the Sheikh Zakariyyah Islamic Research Center, where he serves as head and chief muftī. He is also Shaykh al-Ḥadīth at Al-Madrasatul Arabia Baitussalam in Uttara, Dhaka, and has served as education secretary of the Islamic Research Center Bangladesh.", "In 2025, Muftī Mizanur Rahman joined the staff of Darul Uloom New York as the primary muftī of Darul Iftāʾ, where he oversees the issuing of fatwas and guides the department’s work in serving the community’s religious needs."]
  },
  {
   "id": "manzoor-ahmad",
+  "initials": "MA",
   "name": "Muftī Manzoor Ahmad",
   "title": "Senior Muftī",
   "bio": [
@@ -120,6 +122,7 @@
  },
  {
   "id": "yusuf-chowdhury",
+  "initials": "YC",
   "name": "Muftī Yusuf Chowdhury",
   "title": "Associate Muftī",
   "bio": [
@@ -130,6 +133,7 @@
  },
  {
   "id": "mahdi-alam",
+  "initials": "MA",
   "name": "Muftī Mahdi Alam",
   "title": "Associate Instructor",
   "bio": [
@@ -140,12 +144,14 @@
  },
  {
   "id": "fathi-alam",
+  "initials": "FA",
   "name": "Mawlānā Fathi Alam",
   "title": "Associate Instructor",
   "bio": null
  },
  {
   "id": "suhel-teli",
+  "initials": "ST",
   "name": "Mawlānā Suhel Teli",
   "title": "Associate Instructor",
   "bio": [
@@ -157,14 +163,26 @@
 ];
     var id = new URLSearchParams(location.search).get('t');
     var p = FACULTY.filter(function (f) { return f.id === id; })[0];
-    if (!p) { location.replace('faculty.html'); }
-    else {
+    if (!p) {
+      document.title = 'Biography not found — Darul Iftaa New York';
+      document.getElementById('hero-name').textContent = 'Biography not found';
+      document.getElementById('crumb').textContent = 'Not found';
+      document.querySelector('.faculty-bio-sidebar').style.display = 'none';
+      document.querySelector('.faculty-bio-grid').style.gridTemplateColumns = '1fr';
+      document.getElementById('bio-body').innerHTML = '<div class="bio-coming-soon"><i class="fas fa-user-slash"></i><h3>We could not find that faculty member</h3><p>Please return to the faculty page and choose a name from the list.</p></div>';
+    } else {
+      var idx = FACULTY.indexOf(p), nav = document.querySelector('.faculty-nav-links');
+      [[-1, 'fa-arrow-left', 'Previous'], [1, 'fa-arrow-right', 'Next']].forEach(function (d) {
+        var o = FACULTY[idx + d[0]]; if (!o) return;
+        var a = document.createElement('a'); a.className = 'btn btn-outline-gold'; a.href = 'faculty-bio.html?t=' + o.id;
+        a.textContent = (d[0] < 0 ? 'Previous: ' : 'Next: ') + o.name; nav.appendChild(a);
+      });
       document.title = p.name + ' \u2014 Darul Iftaa New York';
       document.getElementById('crumb').textContent = p.name;
       document.getElementById('hero-name').textContent = p.name;
       document.getElementById('bio-name').textContent = p.name;
       document.getElementById('bio-title').textContent = p.title;
-      document.getElementById('bio-avatar').textContent = 'M';
+      document.getElementById('bio-avatar').textContent = p.initials;
       var body = document.getElementById('bio-body');
       if (p.bio) {
         p.bio.forEach(function (t) {

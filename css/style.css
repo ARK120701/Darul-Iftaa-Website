@@ -1049,6 +1049,20 @@ p  { margin-bottom: 1rem; }
 }
 .faculty-leadership .faculty-card { display: flex; flex-direction: column; }
 .faculty-leadership .faculty-photo { height: 220px; }
+.faculty-grid--four { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+a.faculty-card { display: block; text-decoration: none; color: inherit; }
+.faculty-leadership a.faculty-card { display: flex; }
+.faculty-card:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.faculty-more {
+  display: inline-block;
+  margin-top: 0.9rem;
+  color: var(--blue);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: var(--transition);
+}
+.faculty-more i { font-size: 0.75rem; margin-left: 0.3rem; transition: var(--transition); }
+.faculty-card:hover .faculty-more i { transform: translateX(4px); }
 
 /* ============================================================
    CONTACT PAGE
