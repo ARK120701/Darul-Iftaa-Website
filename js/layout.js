@@ -95,6 +95,8 @@
 '        <div class="footer-col">\n' +
 '          <h4>Contact Info</h4>\n' +
 '          <div class="footer-contact-item"><i class="fas fa-map-marker-alt"></i><span>150-11 Hillside Avenue, Jamaica, NY 11432</span></div>\n' +
+'          <div class="footer-contact-item"><i class="fas fa-phone"></i><a href="tel:+12722753869">(272) 275-3869</a></div>
+' +
 '          <div class="footer-contact-item"><i class="fas fa-envelope"></i><a href="mailto:fatwa@duny.us">fatwa@duny.us</a></div>\n' +
 '          <div class="footer-contact-item"><i class="fas fa-clock"></i><span>Mon&ndash;Fri: 9:00 AM &ndash; 5:00 PM</span></div>\n' +
 '        </div>\n' +
