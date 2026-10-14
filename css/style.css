@@ -1780,3 +1780,37 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, input:focus-visible, 
 .dn-center { text-align: center; }
 .dn-gold-center { margin: 0 auto 1.25rem; }
 .dn-mt { margin-top: 0.5rem; }
+
+/* Page-level nav bar (js/subnav.js) */
+.subnav {
+  position: sticky;
+  top: 72px;
+  z-index: 900;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 10px rgba(12,31,61,0.06);
+}
+.subnav-inner {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subnav-inner::-webkit-scrollbar { display: none; }
+.subnav a {
+  flex: 0 0 auto;
+  padding: 0.85rem 1rem;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+  transition: var(--transition);
+}
+.subnav a:hover { color: var(--navy); }
+.subnav a.active { color: var(--navy); border-bottom-color: var(--gold); font-weight: 600; }
+.subnav-target { scroll-margin-top: 130px; }
