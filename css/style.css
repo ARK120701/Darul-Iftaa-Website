@@ -1814,3 +1814,19 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, input:focus-visible, 
 .subnav a:hover { color: var(--navy); }
 .subnav a.active { color: var(--navy); border-bottom-color: var(--gold); font-weight: 600; }
 .subnav-target { scroll-margin-top: 130px; }
+
+/* Donate page: online giving card */
+.give-head { text-align: center; margin-bottom: 1.75rem; }
+.give-head > i { font-size: 2rem; color: var(--gold); margin-bottom: 0.5rem; }
+.give-head p { color: var(--text-muted); font-size: 0.9rem; max-width: 460px; margin: 0.4rem auto 0; }
+.give-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+.give-tile { display: flex; align-items: center; gap: 0.85rem; padding: 0.9rem 1rem; background: var(--cream); border: 1px solid var(--border); border-radius: var(--radius-lg); text-decoration: none; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+.give-tile:hover { border-color: var(--gold); box-shadow: var(--shadow); transform: translateY(-2px); }
+.give-icon { font-size: 1.4rem; flex-shrink: 0; width: 2.4rem; height: 2.4rem; display: flex; align-items: center; justify-content: center; background: var(--white); border-radius: 50%; border: 1px solid var(--border); }
+.give-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.give-text strong { font-size: 0.9rem; color: var(--navy); }
+.give-text small { font-size: 0.76rem; color: var(--text-muted); line-height: 1.35; }
+.give-arrow { font-size: 0.75rem; color: var(--gold); opacity: 0; transition: opacity 0.2s; }
+.give-tile:hover .give-arrow { opacity: 1; }
+.give-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+@media (max-width: 600px) { .give-grid { grid-template-columns: 1fr; } .donate-form-card { padding: 1.5rem; } }
