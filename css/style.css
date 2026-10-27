@@ -245,6 +245,8 @@ p  { margin-bottom: 1rem; }
   box-shadow: var(--shadow-gold);
 }
 .nav-logo svg { width: 28px; height: 28px; }
+.nav-logo { background: none; box-shadow: none; width: 56px; height: 56px; }
+.nav-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .nav-title { line-height: 1.15; }
 .nav-title span:first-child {
   display: block;

@@ -5,11 +5,7 @@
    then layoutNav() / layoutFooter() at the spot each belongs.
    ============================================================ */
 (function () {
-  var LOGO = '<svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">' +
-    '<path d="M20 4C20 4 8 10 8 20C8 26.627 13.373 32 20 32C26.627 32 32 26.627 32 20C32 10 20 4 20 4Z" fill="white" opacity="0.9"/>' +
-    '<path d="M20 8L21.5 14H28L22.5 17.5L24.5 24L20 20.5L15.5 24L17.5 17.5L12 14H18.5Z" fill="#B08D3B"/>' +
-    '<circle cx="30" cy="8" r="4" fill="white" opacity="0.85"/>' +
-    '<path d="M30 5.5C31.5 6.5 32 8 30 9C28.5 7.5 28 5.5 30 5.5Z" fill="#B08D3B"/></svg>';
+  var LOGO = '<img src="images/logo.png" alt="Darul Iftaa New York">';
 
   /* Pages that belong under another nav item (so it stays highlighted). */
   var SECTION = {
