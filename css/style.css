@@ -1830,3 +1830,32 @@ a:focus-visible, button:focus-visible, .btn:focus-visible, input:focus-visible, 
 .give-tile:hover .give-arrow { opacity: 1; }
 .give-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
 @media (max-width: 600px) { .give-grid { grid-template-columns: 1fr; } .donate-form-card { padding: 1.5rem; } }
+
+/* Zakat calculator (zakat.html) */
+.zk-layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2.5rem; align-items: start; }
+.zk-form { display: flex; flex-direction: column; gap: 1.5rem; }
+.zk-card, .zk-result { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow); padding: 2rem; }
+.zk-card h3 small { font-size: 0.8rem; font-weight: 400; color: var(--text-muted); }
+.zk-card label { display: block; font-size: 0.88rem; font-weight: 600; color: var(--navy); margin-bottom: 1rem; }
+.zk-fields label:last-child { margin-bottom: 0; }
+.zk-money { position: relative; display: block; margin-top: 0.35rem; }
+.zk-money::before { content: '$'; position: absolute; left: 0.9rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+.zk-money input { width: 100%; padding: 0.65rem 0.9rem 0.65rem 1.7rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--cream); font: inherit; font-weight: 400; color: var(--navy); }
+.zk-money input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-pale); }
+.zk-money input:disabled { opacity: 0.7; }
+.zk-standard { margin: 1rem 0 0.75rem; }
+.zk-status { font-size: 0.8rem; color: var(--text-muted); margin: 0.4rem 0 1rem; }
+.zk-status.ok { color: #28794a; }
+.zk-status.err { color: #b3261e; }
+.zk-nisab-box { background: var(--gold-pale); border: 1px solid var(--gold-light); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; font-size: 0.9rem; }
+.zk-nisab-box p { margin: 0.3rem 0 0; }
+.zk-muted { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+.zk-subtotal { margin: 1.25rem 0 0; padding-top: 1rem; border-top: 1px solid var(--border); text-align: right; font-size: 0.92rem; }
+.zk-result { position: sticky; top: 130px; }
+.zk-row { display: flex; justify-content: space-between; gap: 1rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+.zk-row strong { color: var(--navy); }
+.zk-calc { font-size: 0.8rem; color: var(--text-muted); text-align: right; margin: 0.4rem 0; }
+.zk-verdict { margin: 1.25rem 0; padding: 1rem; border-radius: var(--radius); background: var(--cream); border: 1px solid var(--border); font-weight: 600; color: var(--navy); text-align: center; }
+.zk-verdict.due { background: var(--navy); border-color: var(--navy); color: var(--gold); }
+.zk-give { display: block; text-align: center; margin-bottom: 1rem; }
+@media (max-width: 900px) { .zk-layout { grid-template-columns: 1fr; } .zk-result { position: static; } }

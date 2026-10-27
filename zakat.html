@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Zakāt Calculator — Darul Iftaa New York</title>
+  <meta name="description" content="Calculate your annual Zakāt using the silver Niṣāb, with a live silver price." />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=Poppins:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <script src="js/layout.js"></script>
+  <script>layoutNav();</script>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero pattern-bg">
+    <div class="container">
+      <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Zakāt Calculator</span>
+      </div>
+      <h1>Zakāt Calculator</h1>
+      <p>Work out the Zakāt due on your wealth, based on the silver Niṣāb and today's silver price.</p>
+    </div>
+  </section>
+
+  <!-- CALCULATOR -->
+  <section class="section-pad">
+    <div class="container">
+      <div class="zk-layout">
+
+        <div class="zk-form">
+
+          <div class="zk-card">
+            <h3>Niṣāb</h3>
+            <span class="gold-line left"></span>
+            <p class="zk-standard"><strong>Silver Standard (612.36g)</strong></p>
+            <label for="pricePerGram">Silver Price per Gram (USD)</label>
+            <div class="zk-money"><input type="number" id="pricePerGram" placeholder="Loading..." step="0.01" disabled /></div>
+            <div id="priceStatus" class="zk-status"></div>
+            <div class="zk-nisab-box">
+              <strong>Niṣāb Calculation</strong>
+              <p>612.36g × $<span id="currentPrice">0.00</span> = $<span id="nisabThresholdTop">0.00</span></p>
+              <p class="zk-muted">Current Niṣāb threshold: $<span id="nisabThresholdDisplay">0.00</span></p>
+            </div>
+            <p class="zk-muted">The Prophet ﷺ established the Niṣāb as 20 dīnārs (87.48g gold) or 200 dirhams (612.36g silver). Scholars allow using either standard.</p>
+          </div>
+
+          <div class="zk-card">
+            <h3>Assets <small>(value in USD)</small></h3>
+            <span class="gold-line left"></span>
+            <div class="zk-fields">
+              <label>Cash on Hand <span class="zk-money"><input type="text" id="cash" value="0.00" /></span></label>
+              <label>Bank Balance (Checking, Savings &amp; Business) <span class="zk-money"><input type="text" id="bank" value="0.00" /></span></label>
+              <label>Resale Value of Shares (Stocks &amp; Mutual Funds) <span class="zk-money"><input type="text" id="shares" value="0.00" /></span></label>
+              <label>Investment Property (Market Value) <span class="zk-money"><input type="text" id="property" value="0.00" /></span></label>
+              <label>Retirement Plans (Vested) <span class="zk-money"><input type="text" id="retirement" value="0.00" /></span></label>
+              <label>Business Inventory (Wholesale Value) <span class="zk-money"><input type="text" id="inventory" value="0.00" /></span></label>
+              <label>Gold &amp; Silver Jewelry <span class="zk-money"><input type="text" id="jewelry" value="0.00" /></span></label>
+              <label>Debts Owed to You <span class="zk-money"><input type="text" id="debtsOwed" value="0.00" /></span></label>
+              <label>Accounts Receivable <span class="zk-money"><input type="text" id="receivable" value="0.00" /></span></label>
+            </div>
+            <p class="zk-subtotal">Total assets: <strong id="totalAssetSection1">$0.00</strong></p>
+          </div>
+
+          <div class="zk-card">
+            <h3>Liabilities <small>(money owed to others, in USD)</small></h3>
+            <span class="gold-line left"></span>
+            <div class="zk-fields">
+              <label>Short-Term Debts (to be paid in full within one year) <span class="zk-money"><input type="text" id="shortDebt" value="0.00" /></span></label>
+              <label>Long-Term Debts (add one month's payment for debts due in full after more than a year) <span class="zk-money"><input type="text" id="longDebt" value="0.00" /></span></label>
+              <label>Wages Due to Others <span class="zk-money"><input type="text" id="wages" value="0.00" /></span></label>
+            </div>
+            <p class="zk-subtotal">Total liabilities: <strong id="totalAssetSection2">$0.00</strong></p>
+          </div>
+        </div>
+
+        <!-- RESULT -->
+        <aside class="zk-result">
+          <h3>Your Zakāt</h3>
+          <span class="gold-line left"></span>
+          <div class="zk-row"><span>Total Assets</span><strong id="totalAssets">$0.00</strong></div>
+          <div class="zk-row"><span>Total Liabilities</span><strong id="totalLiabilities">$0.00</strong></div>
+          <div class="zk-row"><span>Zakātable Amount</span><strong id="zakatable">$0.00</strong></div>
+          <p class="zk-calc">$<span id="assetsForCalculation">0.00</span> − $<span id="liabilitiesForCalculation">0.00</span> = $<span id="zakatableForCalculation">0.00</span></p>
+          <div class="zk-row"><span>Niṣāb Threshold</span><strong id="nisabAmount">$0.00</strong></div>
+          <p id="zakatResult" class="zk-verdict">You are not obligated to pay Zakāt.</p>
+          <a href="donate.html" class="btn btn-gold zk-give">Give Your Zakāt</a>
+          <p class="zk-muted">This calculator is a guide only. For your specific situation, please <a href="contact.html?subject=fatwa">ask a Muftī</a>.</p>
+        </aside>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <script>layoutFooter();</script>
+
+  <script src="js/main.js"></script>
+  <script>
+    var SILVER_GRAMS = 612.36;
+    var ZAKAT_RATE = 0.025;
+    var el = function (id) { return document.getElementById(id); };
+    var amountInputs = document.querySelectorAll('input[type="text"]');
+
+    function getValue(id) { return parseFloat(el(id).value.replace(/,/g, '')) || 0; }
+    function fmt(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+    function updateNisabDisplay() {
+      var price = getValue('pricePerGram');
+      var nisab = SILVER_GRAMS * price;
+      el('currentPrice').textContent = price.toFixed(2);
+      el('nisabThresholdTop').textContent = fmt(nisab);
+      el('nisabThresholdDisplay').textContent = fmt(nisab);
+      el('nisabAmount').textContent = '$' + fmt(nisab);
+    }
+
+    function calculateZakat() {
+      var nisab = SILVER_GRAMS * getValue('pricePerGram');
+      var assets = ['cash', 'bank', 'shares', 'property', 'retirement', 'inventory', 'jewelry', 'debtsOwed', 'receivable']
+        .reduce(function (sum, id) { return sum + getValue(id); }, 0);
+      var liabilities = getValue('shortDebt') + getValue('longDebt') + getValue('wages');
+      var zakatable = assets - liabilities;
+
+      el('totalAssetSection1').textContent = el('totalAssets').textContent = '$' + fmt(assets);
+      el('totalAssetSection2').textContent = el('totalLiabilities').textContent = '$' + fmt(liabilities);
+      el('zakatable').textContent = '$' + fmt(zakatable);
+      el('assetsForCalculation').textContent = fmt(assets);
+      el('liabilitiesForCalculation').textContent = fmt(liabilities);
+      el('zakatableForCalculation').textContent = fmt(zakatable);
+      updateNisabDisplay();
+
+      var result = el('zakatResult');
+      if (nisab > 0 && zakatable >= nisab) {
+        result.textContent = 'Zakāt due: $' + fmt(zakatable * ZAKAT_RATE) + ' (2.5% of zakātable wealth)';
+        result.className = 'zk-verdict due';
+      } else {
+        result.textContent = 'You are not obligated to pay Zakāt.';
+        result.className = 'zk-verdict';
+      }
+    }
+
+    async function fetchSilverPrice() {
+      var status = el('priceStatus');
+      var input = el('pricePerGram');
+      try {
+        status.textContent = 'Fetching current silver price...';
+        var res = await fetch('https://api.gold-api.com/price/XAG');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var data = await res.json();
+        var perGram = (data.price / 31.1035).toFixed(2);
+        input.value = perGram;
+        status.textContent = 'Price updated: $' + perGram + '/gram (' + data.updatedAtReadable + ')';
+        status.className = 'zk-status ok';
+      } catch (err) {
+        console.error('Error fetching silver price:', err);
+        status.textContent = 'Could not fetch the price. Please enter it manually.';
+        status.className = 'zk-status err';
+        input.disabled = false;
+        input.placeholder = 'e.g. 0.97';
+      }
+      calculateZakat();
+    }
+
+    amountInputs.forEach(function (input) {
+      input.addEventListener('focus', function () {
+        var v = this.value.replace(/[^0-9.]/g, '');
+        this.value = (v === '0.00' || v === '0') ? '' : v;
+        this.select();
+      });
+      input.addEventListener('input', function () {
+        this.value = this.value.replace(/[^0-9.]/g, '');
+        var parts = this.value.split('.');
+        if (parts.length > 2) this.value = parts[0] + '.' + parts.slice(1).join('');
+        calculateZakat();
+      });
+      input.addEventListener('blur', function () {
+        var v = parseFloat(this.value.replace(/[^0-9.]/g, ''));
+        this.value = isNaN(v) ? '0.00' : fmt(v);
+        calculateZakat();
+      });
+    });
+    el('pricePerGram').addEventListener('input', calculateZakat);
+
+    calculateZakat();
+    fetchSilverPrice();
+  </script>
+</body>
+</html>

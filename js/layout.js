@@ -49,6 +49,7 @@
 '            <a href="articles.html"><i class="fas fa-file-lines"></i> Research Papers</a>\n' +
 '            <a href="magazine.html"><i class="fas fa-book-open"></i> Monthly Magazine</a>\n' +
 '            <a href="events.html"><i class="fas fa-calendar-days"></i> Events</a>\n' +
+'            <a href="zakat.html"><i class="fas fa-calculator"></i> Zakat Calculator</a>\n' +
 '          </div>\n' +
 '        </li>\n' +
 '        <li><a href="donate.html"' + act('donate.html') + '>Donate</a></li>\n' +
@@ -60,6 +61,7 @@
 '      <a href="articles.html"' + act('articles.html') + '>Research Papers</a>\n' +
 '      <a href="magazine.html"' + (page === 'magazine.html' ? ' class="active"' : '') + '>Monthly Magazine</a>\n' +
 '      <a href="events.html"' + (page === 'events.html' ? ' class="active"' : '') + '>Events</a>\n' +
+'      <a href="zakat.html"' + act('zakat.html') + '>Zakat Calculator</a>\n' +
 '      <a href="donate.html"' + act('donate.html') + '>Donate</a>\n' +
 '      <a href="contact.html?subject=fatwa">Ask A Question</a>\n' +
 '    </nav>\n' +
@@ -68,7 +70,7 @@
 
   window.layoutFooter = function () {
     var year = new Date().getFullYear();
-    var links = LINKS.concat([['articles.html', 'Research Papers'], ['magazine.html', 'Monthly Magazine'], ['events.html', 'Events']])
+    var links = LINKS.concat([['articles.html', 'Research Papers'], ['magazine.html', 'Monthly Magazine'], ['events.html', 'Events'], ['zakat.html', 'Zakat Calculator']])
       .map(function (l) { return '<li><a href="' + l[0] + '"><i class="fas fa-chevron-right"></i> ' + l[1] + '</a></li>'; }).join('\n            ');
     document.write(
 '<footer class="footer">\n' +
