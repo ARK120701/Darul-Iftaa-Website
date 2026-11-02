@@ -68,7 +68,7 @@
   }
 
   /* Canonical, stable ordering used for serial numbers and prev/next:
-     oldest fatwa first, tie-broken alphabetically by slug. Hidden
+     first uploaded = No. 1, tie-broken alphabetically by slug. Hidden
      fatwas are excluded from the public sequence. */
   function canonicalOrder(all) {
     const hidden = getHidden();
@@ -76,7 +76,8 @@
       .filter(f => !hidden.includes(f.slug))
       .slice()
       .sort((a, b) => {
-        const d = new Date(a.date) - new Date(b.date);
+        const d = ((a.added || 0) - (b.added || 0)) || ((parseInt(a.id) || 0) - (parseInt(b.id) || 0)) ||
+          (new Date(a.date) - new Date(b.date));
         if (d !== 0) return d;
         return (a.slug || '').localeCompare(b.slug || '');
       });

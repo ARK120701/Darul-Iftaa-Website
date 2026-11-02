@@ -399,6 +399,7 @@
       <div class="results-bar">
         <p class="results-count">Showing <strong id="result-count">0</strong> fatwā(s)</p>
         <select class="sort-select" id="sort-select">
+          <option value="number">Number (1, 2, 3…)</option>
           <option value="newest">Recently Added First</option>
           <option value="oldest">Oldest First</option>
           <option value="az">A–Z</option>
@@ -442,7 +443,7 @@
   let activeCategory = 'all';
   let activeKeyword  = null;
   let searchQuery    = '';
-  let sortOrder      = 'newest';
+  let sortOrder      = 'number';
   let serialMap      = {};   // slug -> stable archive number, oldest fatwa = No. 1
 
   // ── Stable serial numbers: oldest fatwa first, independent of the sort/filter in view ──
@@ -451,7 +452,8 @@
       .filter(f => !isHidden(f.slug))
       .slice()
       .sort((a, b) => {
-        const d = new Date(a.date) - new Date(b.date);
+        const d = ((a.added || 0) - (b.added || 0)) || ((parseInt(a.id) || 0) - (parseInt(b.id) || 0)) ||
+          (new Date(a.date) - new Date(b.date));
         if (d !== 0) return d;
         return (a.slug || '').localeCompare(b.slug || '');
       });
@@ -530,7 +532,8 @@
     // top-left), whatever date is written on the fatwa itself.
     const addedOrder = (a, b) => ((b.added || 0) - (a.added || 0)) ||
       ((parseInt(b.id) || 0) - (parseInt(a.id) || 0)) || (new Date(b.date) - new Date(a.date));
-    if (sortOrder === 'newest') list.sort(addedOrder);
+    if (sortOrder === 'number') list.sort((a, b) => (serialMap[a.slug] || 0) - (serialMap[b.slug] || 0));
+    else if (sortOrder === 'newest') list.sort(addedOrder);
     else if (sortOrder === 'oldest') list.sort((a,b) => addedOrder(b, a));
     else list.sort((a,b) => a.title.localeCompare(b.title));
 
