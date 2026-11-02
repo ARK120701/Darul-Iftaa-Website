@@ -34,7 +34,7 @@
 '      <a href="index.html" class="nav-brand">\n' +
 '        <div class="nav-logo">' + LOGO + '</div>\n' +
 '        <div class="nav-title">\n' +
-'          <span>Darul Iftaa New York</span>\n' +
+'          <span>Darul Iftaa</span>\n' +
 '          <span>Dept. of Darul Uloom New York</span>\n' +
 '        </div>\n' +
 '      </a>\n' +
