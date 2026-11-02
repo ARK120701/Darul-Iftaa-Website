@@ -172,7 +172,7 @@
       color: inherit;
     }
     .fatwa-card:hover::before { transform: scaleX(1); }
-    .fatwa-card-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
+    .fatwa-card-body { padding: 1.1rem 1.25rem 0.9rem; flex: 1; display: flex; flex-direction: column; }
     .fatwa-cat-badge {
       display: inline-flex;
       align-items: center;
@@ -214,7 +214,7 @@
     .cat-prohibition  { background: rgba(120,40,140,0.1);  color: #6B2179; }
     .fatwa-card h3 {
       font-size: 1rem;
-      margin-bottom: 0.4rem;
+      margin: 0.6rem 0 0;
       color: var(--navy);
       line-height: 1.35;
     }
@@ -226,18 +226,8 @@
       margin-bottom: 0.75rem;
       line-height: 1.7;
     }
-    .fatwa-excerpt {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-      flex: 1;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
     .fatwa-card-footer {
-      padding: 1rem 1.5rem;
+      padding: 0.6rem 1.25rem;
       border-top: 1px solid var(--border);
       background: var(--off-white);
     }
@@ -245,7 +235,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0;
       font-size: 0.77rem;
       color: var(--text-muted);
     }
@@ -496,7 +486,6 @@
 
   // ── Build a single fatwa card ─────────────────────────────────────────────
   function buildCard(f) {
-    const excerpt = stripHtml(f.answer).slice(0, 160).trim() + '…';
     const cls = catClass[f.category] || 'cat-general';
     const writtenBy = f.written_by ? `<span><i class="fas fa-pen-nib"></i> ${f.written_by}</span>` : '';
 
@@ -512,7 +501,6 @@
             ${num ? `<span class="fatwa-serial-badge">No. ${num}</span>` : ''}
           </div>
           <h3 dir="auto">${f.title}</h3>
-          <p class="fatwa-excerpt" dir="auto">${excerpt}</p>
         </div>
         <div class="fatwa-card-footer">
           <div class="fatwa-meta-row">
