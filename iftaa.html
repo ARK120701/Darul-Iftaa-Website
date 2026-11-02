@@ -399,8 +399,8 @@
       <div class="results-bar">
         <p class="results-count">Showing <strong id="result-count">0</strong> fatwā(s)</p>
         <select class="sort-select" id="sort-select">
-          <option value="number">Number (1, 2, 3…)</option>
           <option value="newest">Recently Added First</option>
+          <option value="number">Number (1, 2, 3…)</option>
           <option value="oldest">Oldest First</option>
           <option value="az">A–Z</option>
         </select>
@@ -443,7 +443,7 @@
   let activeCategory = 'all';
   let activeKeyword  = null;
   let searchQuery    = '';
-  let sortOrder      = 'number';
+  let sortOrder      = 'newest';
   let serialMap      = {};   // slug -> stable archive number, oldest fatwa = No. 1
 
   // ── Stable serial numbers: oldest fatwa first, independent of the sort/filter in view ──
