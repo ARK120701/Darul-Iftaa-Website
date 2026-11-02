@@ -583,7 +583,8 @@
       jsonFatwas = json.fatwas || [];
     } catch(e) { jsonFatwas = []; }
 
-    const fbFatwas = await fbLoadFatwas();
+    const [fbFatwas, fbHidden] = await Promise.all([fbLoadFatwas(), fbLoadHidden()]);
+    if (fbHidden) saveHidden(fbHidden);   // shared hidden list from Firestore overrides this browser's copy
 
     const local      = fbFatwas || getLocal();
     const deleted    = getDeleted();
@@ -1502,12 +1503,14 @@
     }).join('');
   }
 
-  function admToggleHide(slug) {
+  async function admToggleHide(slug) {
     const hidden = getHidden();
-    if (hidden.includes(slug)) { saveHidden(hidden.filter(s => s !== slug)); }
-    else { hidden.push(slug); saveHidden(hidden); }
+    const next = hidden.includes(slug) ? hidden.filter(s => s !== slug) : hidden.concat(slug);
+    saveHidden(next);
     renderFatwas();
     renderManageList();
+    const ok = await fbSaveHidden(next);
+    if (!ok && db) alert('Hidden list saved on this browser only — could not sync to everyone. Make sure the updated Firestore rules (settings collection) are published.');
   }
 
   function admDeleteFatwa(slug) {
@@ -1559,6 +1562,17 @@
   async function fbDeleteFatwa(slug) {
     if (!db) return;
     try { await db.collection('fatwas').doc(slug).delete(); } catch(e) { console.warn('FB delete failed:', e); }
+  }
+  // Shared "hidden fatwas" list: one Firestore doc so hiding applies for every visitor.
+  async function fbLoadHidden() {
+    if (!db) return null;
+    try { const d = await db.collection('settings').doc('hiddenFatwas').get(); return d.exists ? (d.data().slugs || []) : null; }
+    catch(e) { console.warn('FB hidden load failed:', e); return null; }
+  }
+  async function fbSaveHidden(slugs) {
+    if (!db) return false;
+    try { await db.collection('settings').doc('hiddenFatwas').set({ slugs }); return true; }
+    catch(e) { console.warn('FB hidden save failed:', e); return false; }
   }
   async function fbLoadFatwas() {
     if (!db) return null;

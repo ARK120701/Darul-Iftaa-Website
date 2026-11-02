@@ -33,6 +33,15 @@
     } catch (e) { console.warn('[DUNY] Firestore load failed:', e); return null; }
   }
 
+  async function fbLoadHidden() {
+    const db = initFirebase();
+    if (!db) return null;
+    try {
+      const d = await db.collection('settings').doc('hiddenFatwas').get();
+      return d.exists ? (d.data().slugs || []) : null;
+    } catch (e) { console.warn('[DUNY] Hidden list load failed:', e); return null; }
+  }
+
   /* Full merged list: Firestore/local admin uploads + seed data/fatwas.json
      (with saved edit overrides applied), minus anything marked deleted.
      Still includes hidden fatwas — filter those out with canonicalOrder(). */
@@ -44,7 +53,8 @@
       jsonFatwas = json.fatwas || [];
     } catch (e) { jsonFatwas = []; }
 
-    const fbFatwas = await fbLoadFatwas();
+    const [fbFatwas, fbHidden] = await Promise.all([fbLoadFatwas(), fbLoadHidden()]);
+    if (fbHidden) { try { localStorage.setItem('duny_hidden', JSON.stringify(fbHidden)); } catch (e) {} }
     const local = fbFatwas || getLocal();
     const deleted = getDeleted();
     const overrides = getOverrides();

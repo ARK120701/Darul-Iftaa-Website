@@ -30,6 +30,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Site-wide settings, e.g. settings/hiddenFatwas = { slugs: [...] }.
+    match /settings/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Deny everything else by default.
     match /{document=**} {
       allow read, write: if false;
