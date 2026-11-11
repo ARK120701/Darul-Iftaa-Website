@@ -1457,7 +1457,7 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   .programs-grid { grid-template-columns: repeat(2, 1fr); }
   .faculty-grid { grid-template-columns: repeat(2, 1fr); }
   .footer-grid { grid-template-columns: 1fr 1fr; }
-  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .hero-stats { grid-template-columns: repeat(3, 1fr); }
   .hero-divider { display: none; }
   .welcome-grid { gap: 2.5rem; }
   .values-grid { grid-template-columns: repeat(2, 1fr); }
@@ -1487,14 +1487,17 @@ select.form-control { appearance: none; background-image: url("data:image/svg+xm
   .timeline-item { grid-template-columns: 1fr; padding-left: 50px; }
   .timeline-item::after { left: 20px; top: 1.5rem; }
   .timeline-item:nth-child(even) .timeline-content { grid-column: 1; }
-  .hero-stats { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .hero-stats { grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+  .hero-bg { background-size: cover, cover; background-position: center, 60% center; }
 }
 
 @media (max-width: 480px) {
   .footer-grid { grid-template-columns: 1fr; }
-  .hero-stats { grid-template-columns: repeat(2, 1fr); }
+  .hero-stats { grid-template-columns: repeat(3, 1fr); }
   .amount-grid { grid-template-columns: repeat(3, 1fr); }
   .page-hero { padding: 120px 0 60px; }
+  .hero-stat-num { font-size: 1.6rem; }
+  .hero-stat-label { font-size: 0.62rem; letter-spacing: 0.03em; }
 }
 
 /* ============================================================
