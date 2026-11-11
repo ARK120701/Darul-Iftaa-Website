@@ -32,26 +32,51 @@
   </section>
 
   <style>
-    .lib-box { max-width: 900px; margin: 0 auto; background: #fff; border: 1px solid var(--gold-pale); border-top: 3px solid var(--gold); border-radius: 10px; padding: 1.75rem 2rem; box-shadow: 0 2px 10px rgba(12,31,61,.06); }
-    .lib-box .lib-soon { text-align: center; font-style: italic; color: var(--text-muted); margin: 0; }
-    .lib-need-list { direction: rtl; list-style-position: inside; margin: 0; padding: 0; columns: 2 280px; column-gap: 2rem; font-family: 'Amiri', serif; font-size: 1.2rem; line-height: 1.9; }
-    .lib-need-list li { break-inside: avoid; padding: .1rem 0; border-bottom: 1px solid var(--gold-pale); }
-    .lib-list-title { text-align: center; margin: 0 0 1rem; font-family: 'Amiri', serif; font-size: 1.5rem; color: var(--navy); }
-    .lib-have-list li { font-size: 1.1rem; }
-    .lib-need-total { text-align: center; font-weight: 700; color: var(--navy); margin: 1.25rem 0 0; font-family: 'Amiri', serif; font-size: 1.15rem; }
+    .lib-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; max-width: 900px; margin: 0 auto; }
+    .lib-card { background: #fff; border: 1px solid var(--gold-pale); border-top: 3px solid var(--gold); border-radius: 10px; padding: 2rem 1.5rem; text-align: center; box-shadow: 0 2px 10px rgba(12,31,61,.06); display: flex; flex-direction: column; align-items: center; }
+    .lib-card .lib-card-icon { font-size: 2rem; color: var(--gold-dark); margin-bottom: .5rem; }
+    .lib-card h3 { margin: 0 0 .25rem; color: var(--navy); }
+    .lib-card .lib-card-ar { font-family: 'Amiri', serif; font-size: 1.25rem; color: var(--gold-dark); margin: 0 0 .5rem; }
+    .lib-card .lib-card-count { font-size: .9rem; color: var(--text-muted); margin: 0 0 1.25rem; }
+    .lib-card .btn { margin-top: auto; }
+    @media (max-width: 640px) { .lib-pair { grid-template-columns: 1fr; } }
+    .lib-need-list { list-style-position: inside; margin: 0; padding: 0; font-size: 1.15rem; line-height: 1.9; }
+    .lib-need-list li { padding: .1rem 0; border-bottom: 1px solid var(--gold-pale); }
+    .lib-need-total { text-align: center; font-weight: 700; color: var(--navy); margin: 1rem 0 0; font-size: 1.15rem; }
   </style>
 
-  <!-- BOOKS WE HAVE -->
+  <!-- BOOKS: HAVE / NEED -->
   <section class="section-pad">
     <div class="container">
       <div class="title-block">
-        <h2 class="section-title">Books We Have</h2>
+        <h2 class="section-title">Our Books</h2>
         <span class="gold-line"></span>
-        <p class="section-subtitle">The works currently available in the Darul Iftaa library.</p>
+        <p class="section-subtitle">Open a list to see every book in full.</p>
       </div>
-      <div class="lib-box">
-        <h4 class="lib-list-title">قائمة كتب الفقه في مكتبة دار العلوم نيويورك</h4>
-        <ol class="lib-need-list lib-have-list">
+      <div class="lib-pair">
+        <div class="lib-card">
+          <div class="lib-card-icon"><i class="fas fa-book"></i></div>
+          <h3>Books We Have</h3>
+          <p class="lib-card-ar">الكتب الموجودة في المكتبة</p>
+          <p class="lib-card-count">74 books in our library</p>
+          <button type="button" class="btn btn-navy" data-open="dlg-have"><i class="fas fa-list"></i> View the List</button>
+        </div>
+        <div class="lib-card">
+          <div class="lib-card-icon"><i class="fas fa-book-open"></i></div>
+          <h3>Books We Need</h3>
+          <p class="lib-card-ar">الكتب المطلوبة لدار الإفتاء</p>
+          <p class="lib-card-count">34 books we still need</p>
+          <button type="button" class="btn btn-gold" data-open="dlg-need"><i class="fas fa-list"></i> View the List</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <dialog id="dlg-have" class="books-dialog" dir="rtl">
+    <button type="button" class="books-close" data-close aria-label="Close">&times;</button>
+    <h3 class="books-title">قائمة كتب الفقه في مكتبة دار العلوم نيويورك</h3>
+    <p class="books-sub" dir="ltr">Books We Have</p>
+    <ol class="lib-need-list">
           <li value="1" dir="auto">الأصل للإمام محمد الشيباني</li>
           <li value="2" dir="auto">الجامع الصغير</li>
           <li value="3" dir="auto">شرح مختصر الطحاوي للجصاص</li>
@@ -127,21 +152,14 @@
           <li value="75" dir="auto">فتاوى اللجنة الدائمة للبحوث العلمية والإفتاء الشيخ أحمد بن عبد الرزاق الدويش</li>
           <li value="76" dir="auto">Contemporary Fatawa – Mufti Ibrahim Desai</li>
         </ol>
-        <p class="lib-need-total">المجموع: ٧٤ كتابًا</p>
-      </div>
-    </div>
-  </section>
+    <p class="lib-need-total">المجموع: ٧٤ كتابًا</p>
+  </dialog>
 
-  <!-- BOOKS WE NEED -->
-  <section class="section-pad bg-off-white pattern-light">
-    <div class="container">
-      <div class="title-block">
-        <h2 class="section-title">Books We Need</h2>
-        <span class="gold-line"></span>
-        <p class="section-subtitle">Books Needed for Darul Iftaa — الكتب المطلوبة لدار الإفتاء</p>
-      </div>
-      <div class="lib-box">
-        <ol class="lib-need-list">
+  <dialog id="dlg-need" class="books-dialog" dir="rtl">
+    <button type="button" class="books-close" data-close aria-label="Close">&times;</button>
+    <h3 class="books-title">الكتب المطلوبة لدار الإفتاء</h3>
+    <p class="books-sub" dir="ltr">Books Needed for Darul Iftaa</p>
+    <ol class="lib-need-list">
           <li>شرح الجامع الصغير للعتابي</li>
           <li>شرح الجامع الصغير للصدر الشهيد</li>
           <li>تأويلات أهل السنة للماتريدي</li>
@@ -177,10 +195,18 @@
           <li>فتح الغفار — طبعة فرفور، المجمع العلمي لمكتبة الحقاني، بيشاور، باكستان</li>
           <li>منية المفتي</li>
         </ol>
-        <p class="lib-need-total">المجموع: ٣٤ كتابًا.</p>
-      </div>
-    </div>
-  </section>
+    <p class="lib-need-total">المجموع: ٣٤ كتابًا.</p>
+  </dialog>
+
+  <script>
+    document.querySelectorAll('[data-open]').forEach(function (b) {
+      b.addEventListener('click', function () { document.getElementById(b.dataset.open).showModal(); });
+    });
+    document.querySelectorAll('dialog.books-dialog').forEach(function (d) {
+      d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
+      d.querySelector('[data-close]').addEventListener('click', function () { d.close(); });
+    });
+  </script>
 
   <!-- DONATE FOR BOOKS -->
   <section class="section-pad">
