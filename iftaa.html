@@ -23,6 +23,18 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <style>
+    .upload-note {
+      text-align: center;
+      font-size: 0.88rem;
+      color: var(--gold-dark);
+      background: var(--gold-pale);
+      border: 1px solid var(--gold-light);
+      border-radius: 8px;
+      padding: 0.6rem 1rem;
+      margin: 0 auto 1.25rem;
+      max-width: 680px;
+    }
+    .upload-note i { margin-right: 0.35rem; }
     /* ---- Iftaa Search Section ---- */
     .iftaa-search-section {
       background: var(--off-white);
@@ -386,6 +398,7 @@
   <!-- MAIN CONTENT -->
   <section class="iftaa-main">
     <div class="container">
+      <p class="upload-note"><i class="fas fa-circle-info"></i> Darul Iftaa Darul Uloom is in the process of uploading all of their previous fatāwā from the past ten years.</p>
       <div class="results-bar">
         <p class="results-count">Showing <strong id="result-count">0</strong> fatwā(s)</p>
         <select class="sort-select" id="sort-select">

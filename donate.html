@@ -58,6 +58,65 @@
             </p>
             <p style="color: var(--gold); font-size: 0.75rem; font-weight: 600; position: relative; margin: 0;">— Prophet Muhammad ﷺ (Muslim)</p>
           </div>
+
+          <!-- Books needed -->
+          <div class="books-need">
+            <div class="books-need-icon"><i class="fas fa-book-open"></i></div>
+            <h4>Help Us Build Our Library</h4>
+            <p>
+              Darul Iftaa New York is in need of books to strengthen its library. Issuing a sound
+              fatwā depends on research in the classical works of Ḥanafī fiqh, and many of the
+              references our Muftīs need are rare, out of print, or simply not yet on our shelves.
+              Gifting a book — or sponsoring one from our list — becomes ṣadaqah jāriyah, a
+              lasting benefit for every question researched with it for years to come.
+            </p>
+            <button type="button" class="btn btn-gold" id="books-open">
+              <i class="fas fa-list"></i> الكتب المطلوبة لدار الإفتاء
+            </button>
+          </div>
+
+          <dialog id="books-dialog" class="books-dialog" dir="rtl">
+            <button type="button" class="books-close" id="books-close" aria-label="Close">&times;</button>
+            <h3 class="books-title">الكتب المطلوبة لدار الإفتاء</h3>
+            <p class="books-sub" dir="ltr">Books Needed for Darul Iftaa</p>
+            <ol class="books-list">
+          <li>شرح الجامع الصغير للعتابي</li>
+          <li>شرح الجامع الصغير للسيد الشهيد</li>
+          <li>تأويلات أهل السنة للماتريدي</li>
+          <li>شرح مختصر الكرخي للقدوري</li>
+          <li>فتاوى النوازل للسمرقندي</li>
+          <li>الأسرار للدبوسي</li>
+          <li>نوادر معلّى بن منصور</li>
+          <li>تحفة الفقهاء</li>
+          <li>الفقه النافع</li>
+          <li>الملتقط لنصر الدين السمرقندي</li>
+          <li>المحيط الرضوي</li>
+          <li>التجنيس لصاحب الهداية</li>
+          <li>خلاصة الدلائل</li>
+          <li>الحاوي القدسي</li>
+          <li>الكفاية شرح الهداية</li>
+          <li>الكافي للنسفي</li>
+          <li>الغاية</li>
+          <li>السراج الوهاج</li>
+          <li>البحر العميق لابن الضياء</li>
+          <li>حلبة المجلي</li>
+          <li>غنية المتملي</li>
+          <li>تبيين المحارم</li>
+          <li>النهر الفائق</li>
+          <li>رمز الحقائق</li>
+          <li>درر الحكام — طبعة دار صادر</li>
+          <li>درر المنتقى</li>
+          <li>فتاوى الشلبي</li>
+          <li>جامع أحكام الصغار للإمام الأسروشني</li>
+          <li>تنقيح الفتاوى الحامدية</li>
+          <li>فتاوى زكريا — المجلد التاسع</li>
+          <li>فتاوى عثماني — المجلد الرابع</li>
+          <li>فتح الملهم مع التكملة</li>
+          <li>فتح الغفار — طبعة فرفور، المجمع العلمي لمكتبة الحقاني، بيشاور، باكستان</li>
+          <li>منية المفتي</li>
+            </ol>
+            <p class="books-total">المجموع: ٣٤ كتابًا.</p>
+          </dialog>
         </div>
 
         <!-- DONATION FORM -->
@@ -168,5 +227,13 @@
 
   <script src="js/main.js"></script>
   <script src="js/subnav.js"></script>
+  <script>
+    (function () {
+      var d = document.getElementById('books-dialog');
+      document.getElementById('books-open').addEventListener('click', function () { d.showModal(); });
+      document.getElementById('books-close').addEventListener('click', function () { d.close(); });
+      d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
+    })();
+  </script>
 </body>
 </html>
