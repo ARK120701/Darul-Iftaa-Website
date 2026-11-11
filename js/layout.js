@@ -22,7 +22,7 @@
 
   var LINKS = [
     ['index.html', 'Home'], ['about.html', 'About Us'], ['faculty.html', 'Faculty'],
-    ['iftaa-course.html', 'Iftāʾ Course'], ['graduates.html', 'Graduates'], ['iftaa.html', 'Fatāwā']
+    ['iftaa-course.html', 'Iftāʾ Course'], ['graduates.html', 'Graduates'], ['library.html', 'Library'], ['iftaa.html', 'Fatāwā']
   ];
 
   window.layoutNav = function () {
